@@ -3,8 +3,12 @@ const { getUserByEmail } = require('../models/user');
 
 async function showLogin(req, res) {
   let noticeError = '';
-  if (String(req.query.notice || '') === 'invalid_session') {
+  const q = String(req.query.notice || '');
+  if (q === 'invalid_session') {
     noticeError = 'Sesi tidak valid atau akun tidak aktif. Silakan masuk kembali.';
+  } else if (q === 'session_save_failed') {
+    noticeError =
+      'Sesi tidak bisa disimpan (sering terjadi jika cookie diblokir atau pengaturan server salah). Coba lagi atau hubungi admin.';
   }
   return res.render('auth/login', {
     title: 'Admin Login',
@@ -62,8 +66,15 @@ async function login(req, res) {
     // Clear old form data
     delete req.session.oldForm;
 
-    req.flash('success_msg', `Selamat datang, ${user.name}!`);
-    return res.redirect('/admin');
+    // Pastikan sesi tersimpan sebelum redirect (penting di belakang proxy / hosting seperti Render).
+    return req.session.save((saveErr) => {
+      if (saveErr) {
+        console.error('Session save error after login:', saveErr);
+        return res.redirect('/admin/auth/login?notice=session_save_failed');
+      }
+      req.flash('success_msg', `Selamat datang, ${user.name}!`);
+      return res.redirect('/admin');
+    });
   } catch (error) {
     console.error('Login error:', error);
     req.flash('error_msg', 'Terjadi kesalahan saat login. Silakan coba lagi.');

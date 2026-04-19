@@ -17,8 +17,20 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
-if (process.env.TRUST_PROXY === '1') {
-  app.set('trust proxy', 1);
+/**
+ * Render / Fly / Heroku: Node di belakang reverse proxy (HTTPS di edge, proxy ke app).
+ * Tanpa ini: req.secure salah, cookie sesi sering tidak ikut / redirect login terasa "mati".
+ * Set TRUST_PROXY=0 jika app benar-benar langsung ke internet tanpa proxy.
+ */
+const trustProxyEnv = String(process.env.TRUST_PROXY || '').toLowerCase();
+const useTrustProxy =
+  trustProxyEnv === '0' || trustProxyEnv === 'false' || trustProxyEnv === 'no'
+    ? false
+    : isProduction || trustProxyEnv === '1' || trustProxyEnv === 'true';
+
+if (useTrustProxy) {
+  const n = Number(process.env.TRUST_PROXY_HOPS);
+  app.set('trust proxy', Number.isFinite(n) && n > 0 ? n : 1);
 }
 
 app.set('view engine', 'ejs');
