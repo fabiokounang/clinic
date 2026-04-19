@@ -1,0 +1,32 @@
+<%# locals: title, ex: { mode, text, pdf } %>
+<div>
+  <h3 class="text-[0.65rem] font-bold uppercase tracking-wider text-sky-800"><%= title %></h3>
+  <% if (ex.mode === 'pdf') { %>
+    <% if (ex.pdf) { %>
+      <div class="mt-1.5 space-y-1.5 rounded-lg border border-sky-100 bg-sky-50/40 px-2.5 py-2 text-xs">
+        <a
+          href="<%= ex.pdf %>"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 font-semibold text-brand-800 underline decoration-brand-300 underline-offset-2 hover:text-brand-950"
+        >
+          <span aria-hidden="true">📄</span>
+          Buka / unduh PDF hasil
+        </a>
+        <% if (ex.text && String(ex.text).trim()) { %>
+          <p class="mt-1.5 whitespace-pre-line border-t border-sky-100/80 pt-1.5 text-ink-800 leading-relaxed"><%= ex.text %></p>
+        <% } %>
+      </div>
+    <% } else if (ex.text && String(ex.text).trim()) { %>
+      <p class="mt-1.5 whitespace-pre-line rounded-lg border border-amber-100 bg-amber-50/40 px-2.5 py-2 text-xs text-ink-800">
+        PDF belum diunggah. Catatan: <%= ex.text %>
+      </p>
+    <% } else { %>
+      <p class="mt-1.5 text-xs text-ink-500">—</p>
+    <% } %>
+  <% } else if (ex.text && String(ex.text).trim()) { %>
+    <p class="mt-1.5 whitespace-pre-line rounded-lg border border-slate-100 bg-slate-50/60 px-2.5 py-2 text-xs leading-relaxed text-ink-800"><%= ex.text %></p>
+  <% } else { %>
+    <p class="mt-1.5 text-xs text-ink-500">—</p>
+  <% } %>
+</div>

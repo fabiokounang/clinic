@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../partials/auth_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../partials/topbar', { admin: admin }) %>
+
+  <main class="page-hero relative flex min-h-[calc(100vh-4.5rem)] flex-col">
+    <div class="relative mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center gap-0 px-4 py-6 sm:px-6 sm:py-10 lg:flex-row lg:items-center lg:gap-14 lg:px-8 lg:py-14">
+      <!-- Marketing copy: desktop / tablet only — mobile langsung ke form -->
+      <div class="hidden max-w-xl animate-fadeUp lg:flex lg:flex-1 lg:flex-col">
+        <p class="trust-badge mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-brand-900 shadow-soft">
+          <span aria-hidden="true">🔐</span>
+          Akses tenaga kesehatan &amp; administrasi
+        </p>
+
+        <h1 class="text-4xl font-extrabold tracking-tight text-ink-900 sm:text-5xl">
+          Ruang kerja digital yang tenang dan terpercaya.
+        </h1>
+
+        <p class="mt-5 text-base leading-relaxed text-ink-600 sm:text-lg">
+          Kelola data pasien dengan alur yang jelas — mendukung dokumentasi klinis dan koordinasi tim tanpa mengorbankan kenyamanan di layar.
+        </p>
+
+        <ul class="mt-8 space-y-3 text-sm text-ink-600">
+          <li class="flex gap-3"><span class="text-brand-600">●</span> Pencarian cepat nama, kode, atau telepon</li>
+          <li class="flex gap-3"><span class="text-brand-600">●</span> Ekspor Excel &amp; PDF untuk arsip</li>
+          <li class="flex gap-3"><span class="text-brand-600">●</span> Hub tautan &amp; informasi layanan untuk dibagikan ke pasien hanya dari akun staf (setelah masuk)</li>
+        </ul>
+      </div>
+
+      <div class="mx-auto w-full max-w-[min(100%,22rem)] animate-fadeUp sm:max-w-md lg:mx-0 lg:shrink-0">
+        <div class="card-surface glass-card px-5 py-6 sm:px-8 sm:py-8">
+          <%- include('../partials/flash') %>
+
+          <% if (typeof noticeError !== 'undefined' && noticeError) { %>
+            <div class="mb-5 flex gap-3 rounded-2xl border border-rose-200/80 bg-rose-50/90 px-4 py-3 text-sm font-medium text-rose-900 shadow-soft" role="alert">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-700" aria-hidden="true">!</span>
+              <span class="leading-relaxed"><%= noticeError %></span>
+            </div>
+          <% } %>
+
+          <div class="mb-5 text-center sm:mb-6 sm:text-left">
+            <h2 class="text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">Masuk admin</h2>
+            <p class="mt-1.5 text-sm text-ink-500 sm:mt-2">Gunakan akun yang sudah terdaftar di sistem.</p>
+          </div>
+
+          <form action="/admin/auth/login" method="POST" class="space-y-5 js-submit-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div>
+              <label class="field-label" for="login-email">Email</label>
+              <input
+                id="login-email"
+                type="email"
+                name="email"
+                class="field-input"
+                placeholder="nama@klinik.com"
+                required
+                autocomplete="email"
+                value="<%= typeof old !== 'undefined' && old && old.email ? old.email : '' %>"
+              >
+            </div>
+
+            <div>
+              <label class="field-label" for="login-password">Password</label>
+              <input
+                id="login-password"
+                type="password"
+                name="password"
+                class="field-input"
+                placeholder="••••••••"
+                required
+                autocomplete="current-password"
+              >
+            </div>
+
+            <button
+              type="submit"
+              class="js-submit-button btn btn-primary w-full"
+              data-loading-text="Memproses…"
+            >
+              Masuk
+            </button>
+          </form>
+        </div>
+
+        <p class="mt-4 text-center text-[0.7rem] leading-snug text-ink-400 sm:text-xs sm:text-ink-500">
+          <span class="sm:hidden">Akun staf terdaftar saja.</span>
+          <span class="hidden sm:inline">Pengisian data pasien hanya oleh staf yang sudah masuk ke sistem.</span>
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

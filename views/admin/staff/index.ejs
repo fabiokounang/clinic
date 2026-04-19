@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../../partials/admin_shell_open') %>
+
+      <div class="animate-fadeUp">
+        <%- include('../../partials/flash') %>
+
+        <section class="card-surface glass-card mb-6 overflow-hidden shadow-[0_12px_40px_rgba(15,23,42,0.07)] ring-1 ring-slate-900/[0.04]">
+          <div class="border-b border-brand-100/90 bg-gradient-to-br from-brand-50/95 via-white to-sky-50/50 px-4 py-3 sm:px-6 sm:py-4">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h2 class="text-base font-extrabold tracking-tight text-ink-900 sm:text-lg">Cari &amp; filter</h2>
+              <div class="shrink-0 rounded-xl bg-white/80 px-3 py-2 text-center text-xs font-semibold text-ink-700 shadow-sm ring-1 ring-brand-100/80 sm:text-left">
+                <span class="block text-[0.65rem] font-bold uppercase tracking-wider text-ink-500">Hasil</span>
+                <% if (total > 0) { %>
+                  <span class="tabular-nums text-ink-900"><%= displayFrom %>–<%= displayTo %></span>
+                  <span class="text-ink-500"> / </span>
+                  <span class="font-bold tabular-nums text-brand-800"><%= total %></span>
+                <% } else { %>
+                  <span class="font-bold tabular-nums text-ink-600">0</span>
+                  <span class="text-ink-500"> akun</span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 sm:p-5">
+            <form method="GET" action="/admin/users" class="space-y-0">
+              <input type="hidden" name="sort" value="<%= sort %>">
+              <input type="hidden" name="order" value="<%= order %>">
+              <input type="hidden" name="limit" value="<%= limit %>">
+              <input type="hidden" name="page" value="1">
+
+              <% const suControl = 'field-input !min-h-0 h-11 py-2 text-sm'; const suSelect = 'field-select !min-h-0 h-11 py-2 text-sm'; %>
+              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-12 lg:items-end lg:gap-x-3">
+                <div class="min-w-0 sm:col-span-2 lg:col-span-4">
+                  <label class="field-label" for="su-search">Cari</label>
+                  <input
+                    id="su-search"
+                    type="text"
+                    name="search"
+                    class="<%= suControl %>"
+                    placeholder="Nama atau email…"
+                    value="<%= search || '' %>"
+                    autocomplete="off"
+                  >
+                </div>
+
+                <div class="min-w-0 sm:col-span-1 lg:col-span-3">
+                  <label class="field-label" for="su-role">Peran</label>
+                  <select id="su-role" name="role" class="<%= suSelect %>">
+                    <option value="" <%= !roleFilter ? 'selected' : '' %>>Semua</option>
+                    <option value="superadmin" <%= roleFilter === 'superadmin' ? 'selected' : '' %>>Superadmin</option>
+                    <option value="admin" <%= roleFilter === 'admin' ? 'selected' : '' %>>Admin</option>
+                  </select>
+                </div>
+
+                <div class="min-w-0 sm:col-span-1 lg:col-span-3">
+                  <label class="field-label" for="su-status">Status</label>
+                  <select id="su-status" name="status" class="<%= suSelect %>">
+                    <option value="" <%= !statusFilter ? 'selected' : '' %>>Semua</option>
+                    <option value="active" <%= statusFilter === 'active' ? 'selected' : '' %>>Aktif</option>
+                    <option value="inactive" <%= statusFilter === 'inactive' ? 'selected' : '' %>>Nonaktif</option>
+                  </select>
+                </div>
+
+                <div class="flex min-w-0 flex-col justify-end sm:col-span-2 lg:col-span-2">
+                  <button
+                    type="submit"
+                    class="btn btn-primary flex h-11 w-full min-h-0 shrink-0 items-center justify-center whitespace-nowrap rounded-xl px-4 text-sm font-bold shadow-md shadow-brand-900/10"
+                  >
+                    Terapkan
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <div class="card-surface glass-card mb-4 overflow-hidden shadow-[0_12px_40px_rgba(15,23,42,0.07)] ring-1 ring-slate-900/[0.04] sm:mb-5">
+          <div class="flex flex-col gap-3 border-b border-brand-100/90 bg-gradient-to-br from-brand-50/95 via-white to-sky-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
+            <h2 class="text-base font-extrabold tracking-tight text-ink-900 sm:text-lg">Daftar akun</h2>
+            <a href="/admin/users/new" class="btn btn-primary shrink-0 px-4 py-2.5 text-sm font-bold shadow-md shadow-brand-900/10">
+              + Tambah staf
+            </a>
+          </div>
+        </div>
+
+        <% if (!users.length) { %>
+          <div class="card-surface glass-card p-10 text-center">
+            <% if (typeof hasActiveFilters !== 'undefined' && hasActiveFilters) { %>
+              <div class="text-lg font-bold text-ink-800">Tidak ada data</div>
+              <p class="mt-2 text-sm text-ink-500">Coba ubah kata kunci atau filter.</p>
+              <a href="/admin/users" class="btn btn-secondary mt-4 inline-flex text-sm">Reset filter</a>
+            <% } else { %>
+              <div class="text-lg font-bold text-ink-800">Belum ada akun staf</div>
+              <p class="mt-2 text-sm text-ink-500">Tambahkan akun untuk mengakses panel.</p>
+              <a href="/admin/users/new" class="btn btn-primary mt-4 inline-flex text-sm">Tambah staf</a>
+            <% } %>
+          </div>
+        <% } else { %>
+              <div class="grid gap-5 md:hidden">
+                <% users.forEach(function (u, index) { %>
+                  <article
+                    class="rounded-2xl border border-brand-200/50 bg-white/95 p-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] ring-1 ring-slate-900/[0.03] animate-fadeUp"
+                    style="animation-delay: <%= Math.min(index * 35, 350) %>ms;"
+                  >
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <p class="font-bold text-ink-900"><%= u.name %></p>
+                        <p class="mt-0.5 truncate text-sm text-ink-600"><%= u.email %></p>
+                      </div>
+                      <span class="inline-flex shrink-0 rounded-full px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide <%= u.role === 'superadmin' ? 'bg-amber-100 text-amber-900' : 'bg-brand-100 text-brand-800' %>">
+                        <%= roleLabel(u.role) %>
+                      </span>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between border-t border-ink-100/80 pt-3">
+                      <% if (u.is_active) { %>
+                        <span class="text-xs font-semibold text-emerald-700">Aktif</span>
+                      <% } else { %>
+                        <span class="text-xs font-semibold text-ink-500">Nonaktif</span>
+                      <% } %>
+                      <div class="flex gap-2">
+                        <a href="/admin/users/<%= u.id %>/edit" class="btn btn-secondary min-h-0 rounded-xl px-3 py-2 text-xs font-bold">Edit</a>
+                        <% if (u.id !== admin.id) { %>
+                          <form action="/admin/users/<%= u.id %>/delete" method="POST" class="m-0 inline js-submit-form" onsubmit="return confirm('Hapus akun <%= u.email %>?')">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <button type="submit" class="js-submit-button inline-flex min-h-0 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-100" data-loading-text="…">Hapus</button>
+                          </form>
+                        <% } else { %>
+                          <span class="self-center text-[0.7rem] text-ink-400">Anda</span>
+                        <% } %>
+                      </div>
+                    </div>
+                  </article>
+                <% }) %>
+              </div>
+
+          <div class="card-surface glass-card hidden overflow-hidden p-0 md:block">
+                <div class="overflow-x-auto">
+                  <table class="min-w-[640px] w-full border-collapse text-left text-sm">
+                    <thead>
+                      <tr class="border-b border-ink-200/80 bg-brand-50/90 text-xs font-bold uppercase tracking-[0.08em] text-ink-600">
+                        <th scope="col" class="px-4 py-2.5 sm:px-5">
+                          <a href="<%= sortColumnHref('name') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                            Nama
+                            <% if (sort === 'name') { %>
+                              <span class="tabular-nums text-brand-700" aria-hidden="true"><%= order === 'asc' ? '↑' : '↓' %></span>
+                            <% } %>
+                          </a>
+                        </th>
+                        <th scope="col" class="px-4 py-2.5 sm:px-5">
+                          <a href="<%= sortColumnHref('email') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                            Email
+                            <% if (sort === 'email') { %>
+                              <span class="tabular-nums text-brand-700" aria-hidden="true"><%= order === 'asc' ? '↑' : '↓' %></span>
+                            <% } %>
+                          </a>
+                        </th>
+                        <th scope="col" class="px-4 py-2.5 sm:px-5">
+                          <a href="<%= sortColumnHref('role') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                            Peran
+                            <% if (sort === 'role') { %>
+                              <span class="tabular-nums text-brand-700" aria-hidden="true"><%= order === 'asc' ? '↑' : '↓' %></span>
+                            <% } %>
+                          </a>
+                        </th>
+                        <th scope="col" class="px-4 py-2.5 sm:px-5">Status</th>
+                        <th scope="col" class="px-4 py-2.5 text-right sm:px-5">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ink-100">
+                      <% users.forEach(function (u) { %>
+                        <tr class="transition-colors hover:bg-brand-50/50">
+                          <td class="px-4 py-2.5 align-middle font-semibold text-ink-900 sm:px-5"><%= u.name %></td>
+                          <td class="px-4 py-2.5 align-middle text-ink-800 sm:px-5"><%= u.email %></td>
+                          <td class="px-4 py-2.5 align-middle sm:px-5">
+                            <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide <%= u.role === 'superadmin' ? 'bg-amber-100 text-amber-900' : 'bg-brand-100 text-brand-800' %>">
+                              <%= roleLabel(u.role) %>
+                            </span>
+                          </td>
+                          <td class="px-4 py-2.5 align-middle sm:px-5">
+                            <% if (u.is_active) { %>
+                              <span class="text-sm font-medium text-emerald-700">Aktif</span>
+                            <% } else { %>
+                              <span class="text-sm font-medium text-ink-500">Nonaktif</span>
+                            <% } %>
+                          </td>
+                          <td class="px-4 py-2.5 text-right align-middle sm:px-5">
+                            <div class="flex flex-wrap items-center justify-end gap-2">
+                              <a href="/admin/users/<%= u.id %>/edit" class="btn btn-secondary inline-flex min-h-0 rounded-xl px-3 py-2 text-xs font-bold">Edit</a>
+                              <% if (u.id !== admin.id) { %>
+                                <form action="/admin/users/<%= u.id %>/delete" method="POST" class="m-0 inline js-submit-form" onsubmit="return confirm('Hapus akun <%= u.email %>? Tindakan ini tidak dapat dibatalkan.')">
+                                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                  <button type="submit" class="js-submit-button inline-flex min-h-0 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-800 transition hover:bg-red-100" data-loading-text="Menghapus…">Hapus</button>
+                                </form>
+                              <% } else { %>
+                                <span class="inline-flex min-h-[2.25rem] items-center text-xs leading-none text-ink-400">Akun Anda</span>
+                              <% } %>
+                            </div>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="card-surface glass-card mt-4 flex flex-col gap-4 border border-ink-100/90 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 md:mt-0 md:rounded-t-none md:border-t-0">
+                <form method="get" action="/admin/users" class="flex flex-wrap items-center gap-2 text-sm text-ink-600">
+                  <input type="hidden" name="search" value="<%= search || '' %>">
+                  <input type="hidden" name="role" value="<%= roleFilter || '' %>">
+                  <input type="hidden" name="status" value="<%= statusFilter || '' %>">
+                  <input type="hidden" name="sort" value="<%= sort %>">
+                  <input type="hidden" name="order" value="<%= order %>">
+                  <input type="hidden" name="page" value="1">
+                  <label for="su-limit" class="font-semibold text-ink-700">Baris per halaman</label>
+                  <select id="su-limit" name="limit" class="field-select max-w-[120px] !min-h-[48px] py-2 text-sm" onchange="this.form.submit()">
+                    <% (staffListLimits || [10, 25, 50, 100]).forEach(n => { %>
+                      <option value="<%= n %>" <%= Number(limit) === n ? 'selected' : '' %>><%= n %></option>
+                    <% }) %>
+                  </select>
+                </form>
+
+                <% if (totalPages > 1) { %>
+                  <nav class="flex flex-wrap items-center justify-center gap-1 sm:justify-end" aria-label="Paginasi staf">
+                    <% const win = 2; %>
+                    <% const pStart = Math.max(1, page - win); %>
+                    <% const pEnd = Math.min(totalPages, page + win); %>
+
+                    <% if (page > 1) { %>
+                      <a
+                        href="?<%= staffListQs({ page: 1 }) %>"
+                        class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-xs font-bold text-ink-700 hover:bg-brand-50"
+                        aria-label="Halaman pertama"
+                      >«</a>
+                      <a
+                        href="?<%= staffListQs({ page: page - 1 }) %>"
+                        class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-xs font-bold text-ink-700 hover:bg-brand-50"
+                        aria-label="Halaman sebelumnya"
+                      >‹</a>
+                    <% } else { %>
+                      <span class="inline-flex h-10 min-w-[40px] cursor-not-allowed items-center justify-center rounded-xl border border-ink-100 bg-ink-50 px-2 text-xs font-bold text-ink-300">«</span>
+                      <span class="inline-flex h-10 min-w-[40px] cursor-not-allowed items-center justify-center rounded-xl border border-ink-100 bg-ink-50 px-2 text-xs font-bold text-ink-300">‹</span>
+                    <% } %>
+
+                    <% if (pStart > 1) { %>
+                      <a href="?<%= staffListQs({ page: 1 }) %>" class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-sm font-bold text-ink-700 hover:bg-brand-50">1</a>
+                      <% if (pStart > 2) { %>
+                        <span class="px-1 text-ink-400">…</span>
+                      <% } %>
+                    <% } %>
+
+                    <% for (let i = pStart; i <= pEnd; i++) { %>
+                      <a
+                        href="?<%= staffListQs({ page: i }) %>"
+                        class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl px-3 text-sm font-bold transition <%= i === page ? 'bg-brand-800 text-white shadow-cozy' : 'border border-brand-200 bg-white text-ink-700 hover:bg-brand-50' %>"
+                      ><%= i %></a>
+                    <% } %>
+
+                    <% if (pEnd < totalPages) { %>
+                      <% if (pEnd < totalPages - 1) { %>
+                        <span class="px-1 text-ink-400">…</span>
+                      <% } %>
+                      <a href="?<%= staffListQs({ page: totalPages }) %>" class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-sm font-bold text-ink-700 hover:bg-brand-50"><%= totalPages %></a>
+                    <% } %>
+
+                    <% if (page < totalPages) { %>
+                      <a
+                        href="?<%= staffListQs({ page: page + 1 }) %>"
+                        class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-xs font-bold text-ink-700 hover:bg-brand-50"
+                        aria-label="Halaman berikutnya"
+                      >›</a>
+                      <a
+                        href="?<%= staffListQs({ page: totalPages }) %>"
+                        class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-xs font-bold text-ink-700 hover:bg-brand-50"
+                        aria-label="Halaman terakhir"
+                      >»</a>
+                    <% } else { %>
+                      <span class="inline-flex h-10 min-w-[40px] cursor-not-allowed items-center justify-center rounded-xl border border-ink-100 bg-ink-50 px-2 text-xs font-bold text-ink-300">›</span>
+                      <span class="inline-flex h-10 min-w-[40px] cursor-not-allowed items-center justify-center rounded-xl border border-ink-100 bg-ink-50 px-2 text-xs font-bold text-ink-300">»</span>
+                    <% } %>
+                  </nav>
+                <% } %>
+              </div>
+        <% } %>
+      </div>
+
+  <%- include('../../partials/admin_shell_close') %>
+</body>
+</html>

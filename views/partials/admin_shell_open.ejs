@@ -1,0 +1,178 @@
+<%
+
+  const _contentMax = typeof contentMax !== 'undefined' ? contentMax : 'max-w-7xl';
+
+  const _mainExtra = typeof adminMainExtraClass !== 'undefined' ? (' ' + String(adminMainExtraClass).trim()) : '';
+
+  const _inner = typeof adminInnerClass !== 'undefined'
+
+    ? String(adminInnerClass).trim()
+
+    : 'relative mx-auto ' + _contentMax + ' px-4 pb-8 pt-4 sm:px-6 lg:px-8 lg:pb-10';
+
+
+
+  const ap = typeof adminPath !== 'undefined' ? String(adminPath || '') : '';
+
+  const navDash = !!admin && ap === '/admin/dashboard';
+
+  const navNew = !!admin && (ap === '/admin/patients/new' || ap.indexOf('/admin/patients/new') === 0);
+
+  const navPatients = !!admin && ap.indexOf('/admin/patients') === 0 && !navNew;
+
+  const navUsers = !!admin && ap.indexOf('/admin/users') === 0;
+
+  function navSideClass(active) {
+
+    return active
+
+      ? 'bg-brand-100/95 text-brand-950 ring-1 ring-brand-200/70 shadow-sm'
+
+      : 'text-ink-700 hover:bg-brand-50/90 hover:text-ink-900';
+
+  }
+
+  const staffLabel = (admin && (admin.name || admin.email)) ? String(admin.name || admin.email) : 'Staf';
+
+%>
+
+<div class="flex min-h-screen w-full min-w-0 flex-1">
+
+  <div
+
+    class="admin-sidebar-backdrop fixed inset-0 z-40 hidden bg-slate-900/35 backdrop-blur-[2px] transition-opacity lg:hidden"
+
+    data-admin-sidebar-backdrop
+
+    aria-hidden="true"
+
+  ></div>
+
+
+
+  <aside
+
+    class="admin-sidebar fixed inset-y-0 left-0 z-50 flex w-[min(18rem,88vw)] -translate-x-full flex-col border-r border-slate-200/90 bg-white shadow-2xl transition-transform duration-200 ease-out lg:static lg:z-auto lg:w-60 lg:!translate-x-0 lg:shadow-none"
+
+    data-admin-sidebar
+
+    aria-label="Menu admin"
+
+  >
+
+    <div class="flex h-16 shrink-0 items-center gap-3 border-b border-slate-100 px-4 lg:h-[4.25rem]">
+
+      <a href="/admin/dashboard" class="flex min-w-0 flex-1 items-center gap-3 rounded-2xl pr-1 transition hover:bg-brand-50/80">
+
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-100 to-brand-200/90 text-lg shadow-cozy" aria-hidden="true">🏥</span>
+
+        <span class="min-w-0 text-left">
+
+          <span class="block truncate text-base font-extrabold tracking-tight text-ink-900"><%= appName || 'Klinik' %></span>
+
+          <span class="block truncate text-[0.7rem] font-medium text-ink-500">Panel staf</span>
+
+        </span>
+
+      </a>
+
+      <button
+
+        type="button"
+
+        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg text-ink-700 shadow-sm lg:hidden"
+
+        data-admin-sidebar-close
+
+        aria-label="Tutup menu"
+
+      >
+
+        ✕
+
+      </button>
+
+    </div>
+
+
+
+    <nav class="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4" aria-label="Navigasi utama">
+
+      <a href="/admin/dashboard" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition <%= navSideClass(navDash) %>">
+
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/80 text-base shadow-sm ring-1 ring-slate-200/80" aria-hidden="true">📊</span>
+
+        <span>Dashboard</span>
+
+      </a>
+
+      <a href="/admin/patients" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition <%= navSideClass(navPatients) %>">
+
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/80 text-base shadow-sm ring-1 ring-slate-200/80" aria-hidden="true">📋</span>
+
+        <span>Daftar pasien</span>
+
+      </a>
+
+      <a href="/admin/patients/new" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition <%= navSideClass(navNew) %>">
+
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/80 text-base shadow-sm ring-1 ring-slate-200/80" aria-hidden="true">➕</span>
+
+        <span>Tambah pasien</span>
+
+      </a>
+
+      <% if (typeof isSuperAdmin !== 'undefined' && isSuperAdmin) { %>
+
+        <a href="/admin/users" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition <%= navSideClass(navUsers) %>">
+
+          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/80 text-base shadow-sm ring-1 ring-slate-200/80" aria-hidden="true">👥</span>
+
+          <span>Kelola staf</span>
+
+        </a>
+
+      <% } %>
+
+    </nav>
+
+
+
+    <div class="border-t border-slate-100 p-3">
+
+      <p class="truncate px-1 text-xs font-semibold text-ink-600" title="<%= staffLabel %>"><%= staffLabel %></p>
+
+      <form action="/admin/auth/logout" method="POST" class="mt-2 js-submit-form">
+
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <button
+
+          type="submit"
+
+          class="js-submit-button flex w-full items-center justify-center gap-2 rounded-xl border border-brand-200/90 bg-brand-50/80 px-3 py-2.5 text-sm font-bold text-brand-900 transition hover:bg-brand-100"
+
+          data-loading-text="Keluar…"
+
+        >
+
+          Keluar
+
+        </button>
+
+      </form>
+
+    </div>
+
+  </aside>
+
+
+
+  <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+
+  <%- include('./admin_top_navbar') %>
+    <br>
+  <main class="page-hero relative flex-1 min-h-0<%= _mainExtra %>">
+
+    <div class="<%= _inner %>">
+

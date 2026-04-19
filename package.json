@@ -1,0 +1,45 @@
+{
+  "name": "clinic-patient-form",
+  "version": "1.0.0",
+  "description": "Modern cozy clinic patient intake and admin panel with Node.js, Express, EJS, mysql2",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "seed:admin": "node seeders/admin.js",
+    "seed:form-types": "node seeders/form_types.js",
+    "seed:patients": "node seeders/patients.js",
+    "migrate:superadmin": "node scripts/migrate-superadmin-role.js",
+    "migrate:patient-clinical": "node scripts/migrate-patient-clinical-columns.js",
+    "migrate:patient-visits": "node scripts/migrate-patient-visits.js"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "mysql2",
+    "ejs",
+    "clinic",
+    "patient",
+    "cardiology"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-flash": "^0.1.1",
+    "csurf": "^1.11.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0",
+    "multer": "^2.1.1",
+    "mysql2": "^3.11.3",
+    "pdfkit": "^0.18.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}

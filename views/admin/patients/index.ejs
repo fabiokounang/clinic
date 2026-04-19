@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../../partials/admin_shell_open') %>
+
+      <div class="animate-fadeUp">
+        <%- include('../../partials/flash') %>
+
+        <section class="card-surface glass-card mb-6 overflow-hidden shadow-[0_12px_40px_rgba(15,23,42,0.07)] ring-1 ring-slate-900/[0.04]">
+          <div class="border-b border-brand-100/90 bg-gradient-to-br from-brand-50/95 via-white to-sky-50/50 px-4 py-3 sm:px-6 sm:py-4">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h2 class="text-base font-extrabold tracking-tight text-ink-900 sm:text-lg">Filter &amp; ekspor</h2>
+              <div class="shrink-0 rounded-xl bg-white/80 px-3 py-2 text-center text-xs font-semibold text-ink-700 shadow-sm ring-1 ring-brand-100/80 sm:text-left">
+                <span class="block text-[0.65rem] font-bold uppercase tracking-wider text-ink-500">Hasil</span>
+                <% if (total > 0) { %>
+                  <span class="tabular-nums text-ink-900"><%= displayFrom %>–<%= displayTo %></span>
+                  <span class="text-ink-500"> / </span>
+                  <span class="font-bold tabular-nums text-brand-800"><%= total %></span>
+                <% } else { %>
+                  <span class="font-bold tabular-nums text-ink-600">0</span>
+                  <span class="text-ink-500"> data</span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 sm:p-5">
+            <form method="GET" action="/admin/patients" class="space-y-0">
+              <input type="hidden" name="sort" value="<%= sort %>">
+              <input type="hidden" name="order" value="<%= order %>">
+              <input type="hidden" name="limit" value="<%= limit %>">
+              <input type="hidden" name="page" value="1">
+
+              <% const ptControl = 'field-input !min-h-0 h-11 py-2 text-sm'; const ptSelect = 'field-select !min-h-0 h-11 py-2 text-sm'; %>
+              <div class="flex flex-col gap-4">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
+                  <div class="min-w-0 sm:col-span-2 lg:col-span-1">
+                    <label class="field-label" for="pt-search">Cari</label>
+                    <input
+                      id="pt-search"
+                      type="text"
+                      name="search"
+                      class="<%= ptControl %> w-full min-w-0"
+                      placeholder="Nama, kode pasien, telepon…"
+                      value="<%= search || '' %>"
+                      autocomplete="off"
+                    >
+                  </div>
+
+                  <div class="min-w-0 sm:col-span-2 lg:col-span-1">
+                    <label class="field-label" for="pt-form">Jenis form</label>
+                    <select id="pt-form" name="form_type" class="<%= ptSelect %> w-full min-w-0">
+                      <option value="">Semua</option>
+                      <% (formTypes || []).forEach(item => { %>
+                        <option value="<%= item.slug %>" <%= formType === item.slug ? 'selected' : '' %>>
+                          <%= item.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                  </div>
+
+                  <div class="min-w-0 sm:col-span-1">
+                    <label class="field-label" for="pt-from">Dari</label>
+                    <input id="pt-from" type="date" name="from" class="<%= ptControl %> w-full min-w-0" value="<%= dateFrom || '' %>" title="Tanggal terdaftar (mulai)">
+                  </div>
+
+                  <div class="min-w-0 sm:col-span-1">
+                    <label class="field-label" for="pt-to">Sampai</label>
+                    <input id="pt-to" type="date" name="to" class="<%= ptControl %> w-full min-w-0" value="<%= dateTo || '' %>" title="Tanggal terdaftar (akhir)">
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch sm:justify-end sm:gap-3">
+                  <button
+                    type="submit"
+                    class="btn btn-primary flex h-11 min-h-0 w-full min-w-[9rem] shrink-0 items-center justify-center whitespace-nowrap rounded-xl px-5 text-sm font-bold shadow-md shadow-brand-900/10 sm:w-auto"
+                  >
+                    Terapkan
+                  </button>
+                  <a
+                    href="/admin/patients/export/excel<%= exportPatientsQs ? '?' + exportPatientsQs : '' %>"
+                    title="Ekspor Excel sesuai filter saat ini"
+                    class="inline-flex h-11 w-full min-w-[9rem] items-center justify-center rounded-xl border border-ink-200/90 bg-white px-5 text-sm font-bold text-ink-800 shadow-sm transition hover:border-brand-300 hover:bg-brand-50/90 sm:w-auto"
+                  >
+                    Excel
+                  </a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <% if (!patients.length) { %>
+          <div class="card-surface glass-card p-10 text-center">
+            <div class="text-lg font-bold text-ink-800">Tidak ada data</div>
+            <p class="mt-2 text-sm text-ink-500">Coba ubah kata kunci atau filter jenis form.</p>
+          </div>
+        <% } else { %>
+          <%
+            const fmtIdShort = function (raw) {
+              if (!raw) return '—';
+              const x = new Date(raw);
+              if (Number.isNaN(x.getTime())) return '—';
+              return x.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            };
+            const genderLabel = function (g) {
+              if (!g) return '—';
+              const m = { male: 'Laki-laki', female: 'Perempuan', other: 'Lainnya' };
+              return m[g] || String(g);
+            };
+          %>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:hidden">
+            <% patients.forEach((patient, index) => {
+              const fn = (patient.first_name || '?').trim();
+              const ln = (patient.last_name || '').trim();
+              const initials = ((fn.charAt(0) || '') + (ln.charAt(0) || fn.charAt(1) || '')).toUpperCase().slice(0, 2) || '?';
+            %>
+              <article
+                class="relative overflow-hidden rounded-2xl border border-brand-200/50 bg-white/95 shadow-[0_8px_28px_rgba(15,23,42,0.07)] ring-1 ring-slate-900/[0.04] transition duration-300 animate-fadeUp hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(15,23,42,0.1)]"
+                style="animation-delay: <%= Math.min(index * 40, 400) %>ms;"
+              >
+                <div class="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-br from-brand-100/80 via-brand-50/40 to-transparent"></div>
+                <div class="relative p-4">
+                  <div class="flex gap-3">
+                    <div
+                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-200/95 to-brand-400/85 text-xs font-extrabold tracking-tight text-brand-950 shadow-inner ring-2 ring-white/80"
+                      aria-hidden="true"
+                    >
+                      <%= initials %>
+                    </div>
+                    <div class="min-w-0 flex-1 pt-0.5">
+                      <div class="flex flex-wrap gap-1">
+                        <span class="inline-flex max-w-full truncate rounded-full bg-white/90 px-2 py-0.5 text-[0.58rem] font-bold uppercase leading-none tracking-[0.05em] text-ink-600 shadow-sm ring-1 ring-ink-200/60">
+                          <%= patient.patient_code %>
+                        </span>
+                        <span class="inline-flex rounded-full bg-emerald-100/95 px-2 py-0.5 text-[0.58rem] font-bold uppercase leading-none tracking-[0.05em] text-emerald-900 ring-1 ring-emerald-200/80">
+                          <%= patient.form_type %>
+                        </span>
+                      </div>
+                      <h2 class="mt-1.5 text-sm font-bold leading-snug tracking-tight text-ink-900">
+                        <%= patient.first_name %> <%= patient.last_name %>
+                      </h2>
+                    </div>
+                  </div>
+
+                  <dl class="mt-3 grid grid-cols-1 gap-2 rounded-xl bg-gradient-to-b from-brand-50/90 to-white/80 p-2.5 ring-1 ring-brand-100/90 sm:grid-cols-2">
+                    <div class="flex gap-2 rounded-lg bg-white/70 px-2 py-2 shadow-sm ring-1 ring-ink-100/80">
+                      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-[0.7rem] leading-none shadow-inner ring-1 ring-brand-100/80" aria-hidden="true">📞</span>
+                      <div class="min-w-0">
+                        <dt class="text-[0.58rem] font-bold uppercase leading-tight tracking-wide text-ink-500">Telepon</dt>
+                        <dd class="mt-0.5 text-[0.75rem] font-medium leading-snug tabular-nums text-ink-900"><%= patient.phone || '—' %></dd>
+                      </div>
+                    </div>
+                    <div class="flex gap-2 rounded-lg bg-white/70 px-2 py-2 shadow-sm ring-1 ring-ink-100/80">
+                      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[0.7rem] leading-none shadow-inner ring-1 ring-sky-100/80" aria-hidden="true">👤</span>
+                      <div class="min-w-0">
+                        <dt class="text-[0.58rem] font-bold uppercase leading-tight tracking-wide text-ink-500">Gender</dt>
+                        <dd class="mt-0.5 text-[0.75rem] font-medium leading-snug text-ink-900"><%= genderLabel(patient.gender) %></dd>
+                      </div>
+                    </div>
+                    <div class="flex gap-2 rounded-lg bg-white/70 px-2 py-2 shadow-sm ring-1 ring-ink-100/80">
+                      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-[0.7rem] leading-none shadow-inner ring-1 ring-amber-100/80" aria-hidden="true">🎂</span>
+                      <div class="min-w-0">
+                        <dt class="text-[0.58rem] font-bold uppercase leading-tight tracking-wide text-ink-500">Tanggal lahir</dt>
+                        <dd class="mt-0.5 text-[0.75rem] font-medium leading-snug tabular-nums text-ink-900"><%= fmtIdShort(patient.date_of_birth) %></dd>
+                      </div>
+                    </div>
+                    <div class="flex gap-2 rounded-lg bg-white/70 px-2 py-2 shadow-sm ring-1 ring-ink-100/80">
+                      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-[0.7rem] leading-none shadow-inner ring-1 ring-violet-100/80" aria-hidden="true">📅</span>
+                      <div class="min-w-0">
+                        <dt class="text-[0.58rem] font-bold uppercase leading-tight tracking-wide text-ink-500">Terdaftar</dt>
+                        <dd class="mt-0.5 text-[0.75rem] font-medium leading-snug tabular-nums text-ink-900"><%= fmtIdShort(patient.created_at) %></dd>
+                      </div>
+                    </div>
+                  </dl>
+
+                  <div class="mt-3 border-t border-brand-100/90 pt-3">
+                    <a
+                      href="/admin/patients/<%= patient.id %>"
+                      class="btn btn-primary flex w-full !min-h-[2.25rem] justify-center rounded-xl !px-3 !py-2 text-xs font-bold shadow-md shadow-brand-900/10"
+                    >
+                      Lihat detail &amp; riwayat
+                    </a>
+                  </div>
+                </div>
+              </article>
+            <% }) %>
+          </div>
+
+          <div class="card-surface glass-card hidden overflow-hidden p-0 xl:block">
+            <div class="overflow-x-auto">
+              <table class="min-w-[920px] w-full border-collapse text-left text-sm">
+                <thead>
+                  <tr class="border-b border-ink-200/80 bg-brand-50/90 text-xs font-bold uppercase tracking-[0.08em] text-ink-600">
+                    <th scope="col" class="px-4 py-2.5 sm:px-5">
+                      <a href="<%= sortColumnHref('patient_code') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                        Kode
+                        <% if (sort === 'patient_code') { %>
+                          <span class="tabular-nums text-brand-700" aria-hidden="true"><%= order === 'asc' ? '↑' : '↓' %></span>
+                        <% } %>
+                      </a>
+                    </th>
+                    <th scope="col" class="px-4 py-2.5 sm:px-5">
+                      <a href="<%= sortColumnHref('name') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                        Nama
+                        <% if (sort === 'name') { %>
+                          <span class="tabular-nums text-brand-700" aria-hidden="true"><%= order === 'asc' ? '↑' : '↓' %></span>
+                        <% } %>
+                      </a>
+                    </th>
+                    <th scope="col" class="px-4 py-2.5 sm:px-5">
+                      <a href="<%= sortColumnHref('form_type') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                        Jenis form
+                        <% if (sort === 'form_type') { %>
+                          <span class="tabular-nums text-brand-700" aria-hidden="true"><%= order === 'asc' ? '↑' : '↓' %></span>
+                        <% } %>
+                      </a>
+                    </th>
+                    <th scope="col" class="whitespace-nowrap px-4 py-2.5 text-left sm:px-5">Kunjungan</th>
+                    <th scope="col" class="px-4 py-2.5 sm:px-5">
+                      <a href="<%= sortColumnHref('phone') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                        Telepon
+                        <% if (sort === 'phone') { %>
+                          <span class="tabular-nums text-brand-700" aria-hidden="true"><%= order === 'asc' ? '↑' : '↓' %></span>
+                        <% } %>
+                      </a>
+                    </th>
+                    <th scope="col" class="px-4 py-2.5 sm:px-5">
+                      <a href="<%= sortColumnHref('gender') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                        Gender
+                        <% if (sort === 'gender') { %>
+                          <span class="tabular-nums text-brand-700" aria-hidden="true"><%= order === 'asc' ? '↑' : '↓' %></span>
+                        <% } %>
+                      </a>
+                    </th>
+                    <th scope="col" class="px-4 py-2.5 sm:px-5 whitespace-nowrap">
+                      <a href="<%= sortColumnHref('date_of_birth') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                        DOB
+                        <% if (sort === 'date_of_birth') { %>
+                          <span class="tabular-nums text-brand-700" aria-hidden="true"><%= order === 'asc' ? '↑' : '↓' %></span>
+                        <% } %>
+                      </a>
+                    </th>
+                    <th scope="col" class="whitespace-nowrap px-4 py-2.5 sm:px-5">
+                      <a href="<%= sortColumnHref('created_at') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                        Terdaftar
+                        <% if (sort === 'created_at') { %>
+                          <span class="tabular-nums text-brand-700" aria-hidden="true"><%= order === 'asc' ? '↑' : '↓' %></span>
+                        <% } %>
+                      </a>
+                    </th>
+                    <th scope="col" class="w-[1%] whitespace-nowrap px-3 py-2.5 text-right sm:px-4">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-ink-100">
+                  <% patients.forEach((patient, index) => { %>
+                    <tr
+                      class="transition-colors hover:bg-brand-50/50 animate-fadeUp"
+                      style="animation-delay: <%= Math.min(index * 28, 400) %>ms;"
+                    >
+                      <td class="px-4 py-2.5 align-middle sm:px-5">
+                        <span class="inline-flex max-w-full truncate rounded-full bg-ink-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-ink-700">
+                          <%= patient.patient_code %>
+                        </span>
+                      </td>
+                      <td class="max-w-[11rem] px-4 py-2.5 align-middle font-bold text-ink-900 sm:max-w-[16rem] sm:px-5">
+                        <span class="block truncate" title="<%= patient.first_name %> <%= patient.last_name %>">
+                          <%= patient.first_name %> <%= patient.last_name %>
+                        </span>
+                      </td>
+                      <td class="px-4 py-2.5 align-middle sm:px-5">
+                        <span class="inline-flex max-w-full truncate rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-brand-800">
+                          <%= patient.form_type %>
+                        </span>
+                      </td>
+                      <td class="px-4 py-2.5 align-middle tabular-nums text-ink-800 sm:px-5 whitespace-nowrap">
+                        <%= patient.visit_count != null ? patient.visit_count : '—' %>
+                      </td>
+                      <td class="px-4 py-2.5 align-middle tabular-nums text-ink-700 sm:px-5 whitespace-nowrap"><%= patient.phone || '—' %></td>
+                      <td class="px-4 py-2.5 align-middle capitalize text-ink-700 sm:px-5 whitespace-nowrap"><%= patient.gender || '—' %></td>
+                      <td class="px-4 py-2.5 align-middle tabular-nums text-ink-700 sm:px-5 whitespace-nowrap">
+                        <%= patient.date_of_birth ? new Date(patient.date_of_birth).toISOString().slice(0, 10) : '—' %>
+                      </td>
+                      <td class="px-4 py-2.5 align-middle tabular-nums text-ink-600 sm:px-5 whitespace-nowrap">
+                        <%= patient.created_at ? new Date(patient.created_at).toISOString().slice(0, 10) : '—' %>
+                      </td>
+                      <td class="border-l border-ink-100/90 bg-white/80 px-2 py-2 align-middle sm:px-3">
+                        <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                          <a
+                            href="/admin/patients/<%= patient.id %>"
+                            class="btn btn-primary inline-flex shrink-0 !min-h-0 rounded-lg px-3 py-1.5 text-xs font-bold shadow-none"
+                          >Detail</a>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+            <div class="card-surface glass-card mt-4 flex flex-col gap-4 border border-ink-100/90 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 xl:mt-0 xl:rounded-t-none xl:border-t-0">
+              <form method="get" action="/admin/patients" class="flex flex-wrap items-center gap-2 text-sm text-ink-600">
+                <input type="hidden" name="search" value="<%= search || '' %>">
+                <input type="hidden" name="form_type" value="<%= formType || '' %>">
+                <input type="hidden" name="sort" value="<%= sort %>">
+                <input type="hidden" name="order" value="<%= order %>">
+                <input type="hidden" name="page" value="1">
+                <label for="pt-limit" class="font-semibold text-ink-700">Baris per halaman</label>
+                <select id="pt-limit" name="limit" class="field-select max-w-[120px] !min-h-[48px] py-2 text-sm" onchange="this.form.submit()">
+                  <% (patientListLimits || [10, 25, 50, 100]).forEach(n => { %>
+                    <option value="<%= n %>" <%= Number(limit) === n ? 'selected' : '' %>><%= n %></option>
+                  <% }) %>
+                </select>
+              </form>
+
+              <% if (totalPages > 1) { %>
+                <nav class="flex flex-wrap items-center justify-center gap-1 sm:justify-end" aria-label="Paginasi pasien">
+                  <% const win = 2; %>
+                  <% const pStart = Math.max(1, page - win); %>
+                  <% const pEnd = Math.min(totalPages, page + win); %>
+
+                  <% if (page > 1) { %>
+                    <a
+                      href="?<%= patientListQs({ page: 1 }) %>"
+                      class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-xs font-bold text-ink-700 hover:bg-brand-50"
+                      aria-label="Halaman pertama"
+                    >«</a>
+                    <a
+                      href="?<%= patientListQs({ page: page - 1 }) %>"
+                      class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-xs font-bold text-ink-700 hover:bg-brand-50"
+                      aria-label="Halaman sebelumnya"
+                    >‹</a>
+                  <% } else { %>
+                    <span class="inline-flex h-10 min-w-[40px] cursor-not-allowed items-center justify-center rounded-xl border border-ink-100 bg-ink-50 px-2 text-xs font-bold text-ink-300">«</span>
+                    <span class="inline-flex h-10 min-w-[40px] cursor-not-allowed items-center justify-center rounded-xl border border-ink-100 bg-ink-50 px-2 text-xs font-bold text-ink-300">‹</span>
+                  <% } %>
+
+                  <% if (pStart > 1) { %>
+                    <a href="?<%= patientListQs({ page: 1 }) %>" class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-sm font-bold text-ink-700 hover:bg-brand-50">1</a>
+                    <% if (pStart > 2) { %>
+                      <span class="px-1 text-ink-400">…</span>
+                    <% } %>
+                  <% } %>
+
+                  <% for (let i = pStart; i <= pEnd; i++) { %>
+                    <a
+                      href="?<%= patientListQs({ page: i }) %>"
+                      class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl px-3 text-sm font-bold transition <%= i === page ? 'bg-brand-800 text-white shadow-cozy' : 'border border-brand-200 bg-white text-ink-700 hover:bg-brand-50' %>"
+                    ><%= i %></a>
+                  <% } %>
+
+                  <% if (pEnd < totalPages) { %>
+                    <% if (pEnd < totalPages - 1) { %>
+                      <span class="px-1 text-ink-400">…</span>
+                    <% } %>
+                    <a href="?<%= patientListQs({ page: totalPages }) %>" class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-sm font-bold text-ink-700 hover:bg-brand-50"><%= totalPages %></a>
+                  <% } %>
+
+                  <% if (page < totalPages) { %>
+                    <a
+                      href="?<%= patientListQs({ page: page + 1 }) %>"
+                      class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-xs font-bold text-ink-700 hover:bg-brand-50"
+                      aria-label="Halaman berikutnya"
+                    >›</a>
+                    <a
+                      href="?<%= patientListQs({ page: totalPages }) %>"
+                      class="inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl border border-brand-200 bg-white px-2 text-xs font-bold text-ink-700 hover:bg-brand-50"
+                      aria-label="Halaman terakhir"
+                    >»</a>
+                  <% } else { %>
+                    <span class="inline-flex h-10 min-w-[40px] cursor-not-allowed items-center justify-center rounded-xl border border-ink-100 bg-ink-50 px-2 text-xs font-bold text-ink-300">›</span>
+                    <span class="inline-flex h-10 min-w-[40px] cursor-not-allowed items-center justify-center rounded-xl border border-ink-100 bg-ink-50 px-2 text-xs font-bold text-ink-300">»</span>
+                  <% } %>
+                </nav>
+              <% } %>
+            </div>
+        <% } %>
+      </div>
+
+  <%- include('../../partials/admin_shell_close') %>
+</body>
+</html>

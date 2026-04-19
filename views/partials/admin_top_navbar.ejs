@@ -1,0 +1,118 @@
+<%
+
+  const nav =
+
+    typeof adminNav !== 'undefined' && adminNav && typeof adminNav === 'object'
+
+      ? adminNav
+
+      : { pageTitle: '', backItems: [], subtitle: '', hint: '' };
+
+  const navItems = Array.isArray(nav.backItems) ? nav.backItems : [];
+
+  const headerTitle = typeof nav.pageTitle === 'string' ? nav.pageTitle : '';
+
+  const headerSubtitle = typeof nav.subtitle === 'string' ? nav.subtitle : '';
+
+  const headerHint = typeof nav.hint === 'string' ? nav.hint : '';
+
+  const hasNav = navItems.length > 0;
+
+%>
+
+<header
+
+  class="admin-top-navbar relative z-20 w-full shrink-0 border-b border-slate-200/90 bg-white/95 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-md"
+
+  role="banner"
+
+  aria-label="Judul halaman"
+
+>
+
+  <div class="mx-auto flex w-full max-w-[100vw] items-start gap-3 px-4 py-5 sm:items-center sm:gap-4 sm:px-6 lg:px-8">
+
+    <button
+
+      type="button"
+
+      class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-200/80 bg-white text-lg text-ink-800 shadow-soft lg:hidden"
+
+      data-admin-sidebar-toggle
+
+      aria-label="Buka menu"
+
+    >
+
+      ☰
+
+    </button>
+
+
+
+    <div class="flex min-w-0 flex-1 flex-wrap items-center justify-between  gap-y-1.5">
+
+      <% if (hasNav) { %>
+
+      <nav class="flex min-w-0 shrink flex-wrap items-center gap-y-1" aria-label="Navigasi kembali">
+
+        <% navItems.forEach(function (item, i) { %>
+
+          <% if (i === 0) { %>
+<!-- 
+          <a
+
+            href="<%= item.href %>"
+
+            class="group inline-flex max-w-[min(100%,18rem)] shrink-0 items-center gap-1.5 rounded-lg border border-brand-200/90 bg-white px-2 py-1.5 text-[0.7rem] font-bold text-brand-950 shadow-sm transition hover:border-brand-400 hover:bg-brand-50/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50"
+
+          >
+
+            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-brand-50 to-brand-100/90 text-xs text-brand-800 shadow-inner" aria-hidden="true">←</span>
+
+            <span class="min-w-0 truncate leading-tight"><%= item.label %></span>
+
+          </a> -->
+
+          <% } else { %>
+
+          <span class="select-none text-ink-300" aria-hidden="true">·</span>
+
+          <a href="<%= item.href %>" class="shrink-0 text-[0.7rem] font-semibold text-ink-500 underline-offset-2 transition hover:text-brand-800 hover:underline"><%= item.label %></a>
+
+          <% } %>
+
+        <% }); %>
+
+      </nav>
+
+      <% } %>
+
+      <div class="min-w-0 <%= hasNav ? 'flex-1 text-right' : 'w-full text-left' %>">
+
+        <% if (headerTitle) { %>
+
+        <h1 class="truncate text-sm font-extrabold leading-tight tracking-tight text-ink-900 sm:text-base <%= hasNav ? 'text-left' : 'text-left' %>"><%= headerTitle %></h1>
+
+        <% } %>
+
+        <% if (headerSubtitle) { %>
+
+        <p class="mt-0.5 line-clamp-2 text-[0.7rem] leading-snug text-ink-600 sm:text-xs <%= hasNav ? 'text-left' : 'text-left' %>"><%= headerSubtitle %></p>
+
+        <% } %>
+
+        <% if (headerHint) { %>
+
+        <p class="mt-0.5 line-clamp-1 text-[0.65rem] text-ink-500 <%= hasNav ? 'text-left' : 'text-left' %>"><%= headerHint %></p>
+
+        <% } %>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</header>
+

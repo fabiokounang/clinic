@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../../partials/admin_shell_open', {
+    adminMainExtraClass: 'pb-16',
+    adminInnerClass: 'relative mx-auto max-w-xl px-4 pb-8 pt-0 sm:px-6 lg:px-8'
+  }) %>
+
+      <div class="animate-fadeUp">
+        <%- include('../../partials/flash') %>
+
+        <section class="card-surface glass-card overflow-hidden shadow-[0_12px_40px_rgba(15,23,42,0.07)] ring-1 ring-slate-900/[0.04]">
+          <div class="border-b border-brand-100/90 bg-gradient-to-br from-brand-50/95 via-white to-sky-50/50 px-5 py-3 sm:px-6 sm:py-4">
+            <h2 class="text-sm font-extrabold text-ink-900 sm:text-base">Data akun</h2>
+          </div>
+          <form action="/admin/users/<%= staff.id %>/edit" method="POST" class="space-y-5 p-5 sm:p-6">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+            <div>
+              <label class="field-label" for="su-name">Nama</label>
+              <input id="su-name" name="name" type="text" class="field-input" required maxlength="120" value="<%= staff.name %>">
+            </div>
+
+            <div>
+              <label class="field-label" for="su-email">Email</label>
+              <input id="su-email" name="email" type="email" class="field-input" required value="<%= staff.email %>">
+            </div>
+
+            <div>
+              <label class="field-label" for="su-role">Peran</label>
+              <select id="su-role" name="role" class="field-select">
+                <option value="admin" <%= staff.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                <option value="superadmin" <%= staff.role === 'superadmin' ? 'selected' : '' %>>Superadmin</option>
+              </select>
+            </div>
+
+            <div class="flex items-start gap-3 rounded-2xl border border-ink-100 bg-ink-50/40 p-4">
+              <input id="su-active" name="is_active" type="checkbox" value="1" class="mt-1 h-4 w-4 rounded border-ink-300 text-brand-700 focus:ring-brand-500" <%= staff.is_active ? 'checked' : '' %>>
+              <label for="su-active" class="text-sm leading-relaxed text-ink-700">
+                <span class="font-semibold text-ink-900">Akun aktif</span>
+                <span class="mt-0.5 block text-xs text-ink-500">Nonaktifkan untuk menutup akses login.</span>
+              </label>
+            </div>
+
+            <div class="rounded-2xl border border-dashed border-brand-200/80 bg-brand-50/40 p-4">
+              <p class="text-xs font-bold uppercase tracking-wider text-brand-800">Password baru</p>
+              <p class="mt-1 text-xs text-ink-600">Opsional. Kosongkan jika tidak diganti.</p>
+              <div class="mt-4 space-y-4">
+                <div>
+                  <label class="field-label" for="su-password">Password baru</label>
+                  <input id="su-password" name="password" type="password" class="field-input" minlength="10" autocomplete="new-password" placeholder="Minimal 10 karakter jika diisi">
+                </div>
+                <div>
+                  <label class="field-label" for="su-password2">Konfirmasi</label>
+                  <input id="su-password2" name="password_confirm" type="password" class="field-input" minlength="10" autocomplete="new-password">
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-3 border-t border-ink-100/90 pt-5 sm:flex-row sm:justify-end">
+              <a href="/admin/users" class="btn btn-secondary order-2 w-full justify-center sm:order-1 sm:w-auto">Batal</a>
+              <button type="submit" class="btn btn-primary order-1 w-full justify-center sm:order-2 sm:w-auto">Simpan</button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+  <%- include('../../partials/admin_shell_close') %>
+</body>
+</html>

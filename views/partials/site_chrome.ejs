@@ -1,0 +1,25 @@
+<% const isHub = typeof hubMode !== 'undefined' && hubMode === true; %>
+<div class="site-top-accent" aria-hidden="true"></div>
+
+<% if (isHub) { %>
+  <header class="site-stripe site-stripe--hub">
+    <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+      <div class="flex items-start gap-3 sm:items-center">
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-100 to-brand-200/90 text-2xl shadow-soft" aria-hidden="true">🏥</span>
+        <div>
+          <h1 class="text-lg font-extrabold tracking-tight text-ink-900 sm:text-xl"><%= appName || 'Klinik' %></h1>
+        </div>
+      </div>
+    </div>
+  </header>
+<% } else { %>
+  <header class="site-stripe site-stripe--patient">
+    <div class="mx-auto max-w-6xl px-4 py-4 text-center sm:py-5">
+      <p class="inline-flex flex-wrap items-center justify-center gap-2 text-sm font-bold text-ink-900">
+        <span aria-hidden="true">🏥</span>
+        <span><%= appName || 'Klinik' %></span>
+      </p>
+      <p class="mt-1.5 text-xs text-ink-500 sm:text-sm">Informasi layanan · data klinik dicatat oleh tim medis</p>
+    </div>
+  </header>
+<% } %>

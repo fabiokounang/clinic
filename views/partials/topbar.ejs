@@ -1,0 +1,86 @@
+<header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-md shadow-soft">
+  <%
+    const ap = typeof adminPath !== 'undefined' ? String(adminPath || '') : '';
+    const hideStaffLoginCta =
+      ap === '/' || ap.indexOf('/admin/auth/login') === 0;
+    const navDash = !!admin && ap === '/admin/dashboard';
+    const navNew = !!admin && (ap === '/admin/patients/new' || ap.indexOf('/admin/patients/new') === 0);
+    const navPatients = !!admin && ap.indexOf('/admin/patients') === 0 && !navNew;
+    const navUsers = !!admin && ap.indexOf('/admin/users') === 0;
+    function navClass(active) {
+      return active
+        ? 'rounded-xl px-3 py-2 text-sm font-bold text-brand-900 bg-brand-100/90 ring-1 ring-brand-200/60'
+        : 'rounded-xl px-3 py-2 text-sm font-semibold text-ink-700 transition hover:bg-brand-50';
+    }
+  %>
+  <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+    <a href="<%= admin ? '/admin/dashboard' : '/' %>" class="flex min-w-0 items-center gap-3 rounded-2xl pr-2 transition hover:bg-brand-50/90">
+      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-100 to-brand-200/90 text-xl shadow-cozy animate-floatSoft" aria-hidden="true">
+        🏥
+      </div>
+      <div class="min-w-0 text-left">
+        <div class="truncate text-lg font-extrabold tracking-tight text-ink-900"><%= appName || 'Klinik' %></div>
+        <div class="text-xs font-medium text-ink-500">Layanan pasien terpercaya</div>
+      </div>
+    </a>
+
+    <% if (admin) { %>
+      <div class="hidden items-center gap-1 md:flex">
+        <a href="/admin/dashboard" class="<%= navClass(navDash) %>">Dashboard</a>
+        <a href="/admin/patients" class="<%= navClass(navPatients) %>">Daftar pasien</a>
+        <a href="/admin/patients/new" class="<%= navClass(navNew) %>">Tambah pasien</a>
+        <% if (typeof isSuperAdmin !== 'undefined' && isSuperAdmin) { %>
+          <a href="/admin/users" class="<%= navClass(navUsers) %>">Kelola staf</a>
+        <% } %>
+
+        <form action="/admin/auth/logout" method="POST" class="m-0 ml-2 js-submit-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button
+            type="submit"
+            class="js-submit-button btn btn-primary px-4 py-2 text-sm"
+            data-loading-text="Keluar…"
+          >
+            Keluar
+          </button>
+        </form>
+      </div>
+
+      <button
+        type="button"
+        class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-brand-200/80 bg-white text-lg text-ink-800 shadow-soft md:hidden"
+        data-mobile-menu-toggle
+        aria-label="Buka menu"
+      >
+        ☰
+      </button>
+    <% } else if (!hideStaffLoginCta) { %>
+      <div class="flex items-center gap-2">
+        <a href="/admin/auth/login" class="btn btn-primary px-4 py-2 text-sm shadow-soft">Masuk staf</a>
+      </div>
+    <% } %>
+  </div>
+
+  <% if (admin) { %>
+    <div class="hidden border-t border-brand-100/90 bg-white/98 px-4 py-4 md:hidden" data-mobile-menu>
+      <div class="flex flex-col gap-2">
+        <a href="/admin/dashboard" class="<%= navClass(navDash) %> px-4 py-3">Dashboard</a>
+        <a href="/admin/patients" class="<%= navClass(navPatients) %> px-4 py-3">Daftar pasien</a>
+        <a href="/admin/patients/new" class="<%= navClass(navNew) %> px-4 py-3">Tambah pasien</a>
+        <% if (typeof isSuperAdmin !== 'undefined' && isSuperAdmin) { %>
+          <a href="/admin/users" class="<%= navClass(navUsers) %> px-4 py-3">Kelola staf</a>
+        <% } %>
+
+        <form action="/admin/auth/logout" method="POST" class="m-0 js-submit-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button
+            type="submit"
+            class="js-submit-button btn btn-primary mt-1 w-full px-4 py-3 text-sm"
+            data-loading-text="Keluar…"
+          >
+            Keluar
+          </button>
+        </form>
+      </div>
+    </div>
+  <% } %>
+</header>

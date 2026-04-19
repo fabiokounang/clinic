@@ -1,0 +1,21 @@
+<% if (success_msg && success_msg.length) { %>
+  <div class="mb-5 space-y-3" role="status" aria-live="polite">
+    <% success_msg.forEach((msg) => { %>
+      <div class="flex gap-3 rounded-2xl border border-emerald-200/80 bg-emerald-50/90 px-4 py-3 text-sm font-medium text-emerald-900 shadow-soft animate-fadeUp">
+        <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700" aria-hidden="true">✓</span>
+        <span class="leading-relaxed"><%= msg %></span>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<% if (error_msg && error_msg.length) { %>
+  <div class="mb-5 space-y-3" role="alert" aria-live="assertive">
+    <% error_msg.forEach((msg) => { %>
+      <div class="flex gap-3 rounded-2xl border border-rose-200/80 bg-rose-50/90 px-4 py-3 text-sm font-medium text-rose-900 shadow-soft animate-fadeUp">
+        <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-700" aria-hidden="true">!</span>
+        <span class="leading-relaxed"><%= msg %></span>
+      </div>
+    <% }) %>
+  </div>
+<% } %>

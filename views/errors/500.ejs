@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../partials/topbar', { admin: admin }) %>
+
+  <main class="page-hero relative flex min-h-[calc(100vh-5rem)] items-center">
+    <div class="relative mx-auto w-full max-w-lg px-4 py-12 sm:px-6 lg:px-8">
+      <div class="card-surface glass-card p-8 text-center animate-fadeUp sm:p-10">
+        <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-rose-100 text-3xl font-bold text-rose-700 shadow-soft" aria-hidden="true">
+          !
+        </div>
+
+        <h1 class="mt-6 text-2xl font-extrabold tracking-tight text-ink-900 sm:text-3xl">
+          Terjadi kesalahan di server
+        </h1>
+
+        <p class="mx-auto mt-4 max-w-md text-base leading-relaxed text-ink-600">
+          Permintaan tidak bisa diproses. Jika baru mengubah database, pastikan skema sudah sesuai dengan <span class="font-mono text-xs">utils/schema.sql</span> dan variabel <span class="font-mono text-xs">.env</span> benar.
+        </p>
+
+        <% if (typeof showDevHint !== 'undefined' && showDevHint && typeof devHint === 'string' && devHint) { %>
+          <div class="mt-6 rounded-2xl border border-rose-200 bg-rose-50/80 p-4 text-left">
+            <div class="text-xs font-bold uppercase tracking-wider text-rose-800">Detail (mode non-production)</div>
+            <pre class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-rose-900"><%= devHint %></pre>
+          </div>
+        <% } %>
+
+        <div class="mt-10 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
+          <a href="/" class="btn btn-secondary w-full sm:w-auto">Beranda</a>
+          <a href="/admin/auth/login" class="btn btn-primary w-full sm:w-auto">Login admin</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

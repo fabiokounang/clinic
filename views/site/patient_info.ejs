@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../partials/site_chrome') %>
+
+  <main class="page-hero relative pb-20">
+    <div class="relative mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+      <div class="text-center animate-fadeUp">
+        <p class="trust-badge mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-brand-900 shadow-soft">
+          <span aria-hidden="true">🏥</span>
+          <%= appName %>
+        </p>
+
+        <h1 class="text-3xl font-extrabold tracking-tight text-ink-900 sm:text-4xl">
+          <%= formTypeData.name %>
+        </h1>
+
+        <p class="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-ink-600 sm:text-base">
+          Rekam medis dan data klinis <strong class="text-ink-800">dicatat oleh tim dokter dan petugas klinik</strong> setelah Anda berkonsultasi. Halaman ini hanya berisi informasi umum — tidak ada formulir data medis di sini.
+        </p>
+      </div>
+
+      <div class="card-surface glass-card mx-auto mt-10 max-w-lg p-6 sm:p-8 animate-fadeUp">
+        <div class="flex gap-4">
+          <div class="stat-icon shrink-0" aria-hidden="true">🔐</div>
+          <div>
+            <h2 class="text-lg font-extrabold text-ink-900">Privasi &amp; keamanan</h2>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">
+              Data pribadi dan hasil pemeriksaan tidak dikumpulkan melalui tautan ini. Untuk janji temu atau pertanyaan, hubungi klinik melalui kontak resmi.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mx-auto mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center animate-fadeUp">
+        <a href="/" class="btn btn-secondary justify-center px-5 py-3 text-sm">
+          Beranda
+        </a>
+        <a href="/admin/auth/login" class="btn btn-primary justify-center px-5 py-3 text-sm shadow-soft">
+          Masuk staf / dokter
+        </a>
+      </div>
+
+      <p class="mx-auto mt-10 max-w-md text-center text-xs leading-relaxed text-ink-500">
+        Tautan ini aman dibagikan ke pasien sebagai pengantar informasi. Pengisian rekam medis hanya melalui sistem internal klinik setelah autentikasi.
+      </p>
+    </div>
+  </main>
+
+  <%- include('../partials/site_footer_min') %>
+</body>
+</html>

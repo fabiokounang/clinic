@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../../partials/app_head', { title: title }) %>
+  <style>
+    /*
+      Konten non-summary di <details> defaultnya display:none saat tertutup,
+      sehingga transisi CSS tidak jalan. Paksa panel tetap di layout (grid + 0fr)
+      supaya 0fr → 1fr bisa diinterpolasi.
+    */
+    details.visit-accordion > .visit-acc-slide {
+      display: grid !important;
+      grid-template-rows: 0fr;
+      overflow: hidden;
+      transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    details.visit-accordion[open] > .visit-acc-slide {
+      grid-template-rows: 1fr;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      details.visit-accordion > .visit-acc-slide {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../../partials/admin_shell_open', {
+    adminMainExtraClass: 'pb-16',
+    adminInnerClass: 'relative mx-auto max-w-6xl px-4 pb-6 pt-0 sm:px-6 lg:px-8 lg:pb-8'
+  }) %>
+
+      <div class="animate-fadeUp">
+        <% 
+          const initials = (((patient.first_name || '?').trim().charAt(0)) + ((patient.last_name || '').trim().charAt(0))).toUpperCase() || '?';
+          const genderLabel = patient.gender === 'male' ? 'Laki-laki' : patient.gender === 'female' ? 'Perempuan' : patient.gender === 'other' ? 'Lainnya' : '—';
+          const dobStr = patient.date_of_birth ? new Date(patient.date_of_birth).toISOString().slice(0, 10) : '—';
+          const createdStr = patient.created_at ? new Date(patient.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+          function jparse(s) {
+            if (s == null || s === '') return null;
+            if (typeof s === 'object') return s;
+            try { return JSON.parse(String(s)); } catch (e) { return null; }
+          }
+          const medsJ = jparse(patient.medications_json);
+          function examShow(raw) {
+            const p = jparse(raw);
+            if (p && typeof p === 'object' && !Array.isArray(p) && (p.mode === 'text' || p.mode === 'pdf')) {
+              return { mode: p.mode, text: p.text || '', pdf: p.pdf || '' };
+            }
+            if (Array.isArray(p) && p.length) {
+              return {
+                mode: 'text',
+                text: p.map(function (x) { return String(x || ''); }).filter(function (s) { return s.trim(); }).join('\n'),
+                pdf: ''
+              };
+            }
+            return { mode: 'text', text: '', pdf: '' };
+          }
+          const ecgEx = examShow(patient.ecg_results);
+          const echoEx = examShow(patient.echo_results);
+          const labEx = examShow(patient.lab_results);
+          const apptJ = jparse(patient.appointments_json);
+        %>
+
+        <%- include('../../partials/flash') %>
+
+        <section class="relative overflow-hidden rounded-2xl border border-brand-200/40 bg-gradient-to-br from-brand-50/90 via-white to-sky-50/25 p-4 shadow-soft sm:p-5">
+          <div class="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-brand-200/20 blur-3xl"></div>
+          <div class="pointer-events-none absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-sky-200/15 blur-3xl"></div>
+
+          <div class="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+            <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+              <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 text-base font-extrabold tracking-tight text-white shadow-md ring-2 ring-white/80">
+                <%= initials %>
+              </div>
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="rounded-full bg-white/90 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-brand-900 ring-1 ring-brand-200/60">
+                    <%= patient.form_type %>
+                  </span>
+                  <span class="rounded-full bg-ink-900/5 px-2 py-0.5 font-mono text-[0.65rem] font-bold text-ink-800 ring-1 ring-ink-200/80">
+                    <%= patient.patient_code %>
+                  </span>
+                </div>
+                <h1 class="mt-2 text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">
+                  <%= patient.first_name %> <%= patient.last_name %>
+                </h1>
+                <p class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ink-600">
+                  <span><span class="font-semibold text-ink-700">DOB:</span> <%= dobStr %></span>
+                  <span class="hidden sm:inline text-ink-300">·</span>
+                  <span><span class="font-semibold text-ink-700">Kelamin:</span> <%= genderLabel %></span>
+                </p>
+                <p class="mt-1 text-[0.7rem] text-ink-500">Terdaftar: <%= createdStr %></p>
+                <% if (typeof visits !== 'undefined' && visits && visits.length) { %>
+                  <p class="mt-0.5 text-[0.7rem] font-semibold text-brand-800"><%= visits.length %> kunjungan</p>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="flex w-full flex-col gap-1.5 sm:w-auto sm:min-w-[220px]">
+              <p class="text-[0.65rem] font-bold uppercase tracking-wider text-ink-400">Ekspor &amp; aksi</p>
+              <div class="grid grid-cols-2 gap-1.5">
+                <a
+                  href="/admin/patients/<%= patient.id %>/export/excel"
+                  class="inline-flex min-h-0 items-center justify-center rounded-lg border border-ink-200/90 bg-white px-2 py-1.5 text-center text-[0.7rem] font-bold text-ink-800 shadow-sm transition hover:border-brand-300 hover:bg-brand-50/80"
+                  title="Satu baris per kunjungan"
+                >
+                  Excel (semua)
+                </a>
+                <a
+                  href="/admin/patients/<%= patient.id %>/export/pdf"
+                  class="inline-flex min-h-0 items-center justify-center rounded-lg bg-gradient-to-b from-brand-700 to-brand-800 px-2 py-1.5 text-center text-[0.7rem] font-bold text-white shadow-sm transition hover:from-brand-600 hover:to-brand-700"
+                  title="Satu halaman per kunjungan"
+                >
+                  PDF (semua)
+                </a>
+              </div>
+              <% if (patient.form_type === 'cardiology') { %>
+                <a
+                  href="/admin/patients/<%= patient.id %>/visits/new"
+                  class="inline-flex min-h-0 w-full items-center justify-center rounded-lg border border-ink-200/90 bg-white px-2 py-1.5 text-[0.7rem] font-bold text-ink-800 shadow-sm transition hover:bg-brand-50/80"
+                >
+                  + Kunjungan baru
+                </a>
+              <% } %>
+              <form
+                action="/admin/patients/<%= patient.id %>/delete"
+                method="POST"
+                class="m-0 js-submit-form"
+                onsubmit="return confirm('Hapus SELURUH data pasien ini (semua kunjungan) dari sistem? Tindakan ini tidak dapat dibatalkan.')"
+              >
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button
+                  type="submit"
+                  class="js-submit-button inline-flex w-full min-h-0 items-center justify-center rounded-lg border border-rose-200 bg-white px-2 py-1.5 text-[0.7rem] font-bold text-rose-700 transition hover:bg-rose-50"
+                  data-loading-text="Menghapus…"
+                >
+                  Hapus pasien (semua rekam)
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <div class="mt-5 grid gap-4 lg:grid-cols-12 lg:gap-6">
+          <aside class="space-y-4 lg:col-span-4">
+            <div class="card-surface glass-card overflow-hidden">
+              <div class="border-b border-slate-100 bg-gradient-to-r from-brand-50/80 to-transparent px-4 py-2.5">
+                <h2 class="flex items-center gap-2 text-sm font-extrabold text-ink-900">
+                  <span class="stat-icon !h-7 !w-7 !text-xs" aria-hidden="true">📇</span>
+                  Kontak &amp; identitas
+                </h2>
+              </div>
+              <dl class="divide-y divide-slate-100 px-4 py-1">
+                <div class="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:justify-between sm:gap-3">
+                  <dt class="text-[0.65rem] font-bold uppercase tracking-wider text-ink-400">Telepon</dt>
+                  <dd class="text-xs font-medium text-ink-900 sm:text-right"><%= patient.phone || '—' %></dd>
+                </div>
+                <div class="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:justify-between sm:gap-3">
+                  <dt class="text-[0.65rem] font-bold uppercase tracking-wider text-ink-400">Email</dt>
+                  <dd class="break-all text-xs font-medium text-ink-900 sm:max-w-[60%] sm:text-right"><%= patient.email || '—' %></dd>
+                </div>
+                <div class="py-2.5">
+                  <dt class="text-[0.65rem] font-bold uppercase tracking-wider text-ink-400">Alamat</dt>
+                  <dd class="mt-0.5 whitespace-pre-line text-xs leading-relaxed text-ink-800"><%= patient.address || '—' %></dd>
+                </div>
+              </dl>
+            </div>
+          </aside>
+
+          <div id="patient-visits-accordion" class="space-y-1 lg:col-span-8">
+            <% if (typeof visits !== 'undefined' && visits && visits.length) { %>
+              <% visits.forEach(function (visit, visitIdx) { %>
+                <%- include('../../partials/patient_visit_section', {
+                  visit,
+                  patient,
+                  jparse,
+                  examShow,
+                  visitOpenDefault: visitIdx === visits.length - 1
+                }) %>
+              <% }); %>
+            <% } else { %>
+            <div class="card-surface glass-card overflow-hidden">
+              <div class="border-b border-slate-100 bg-gradient-to-r from-brand-50/80 to-transparent px-5 py-4">
+                <h2 class="flex items-center gap-2 text-lg font-extrabold text-ink-900">
+                  <span class="stat-icon !h-9 !w-9 !text-base" aria-hidden="true">🫀</span>
+                  Diagnosis &amp; riwayat
+                </h2>
+              </div>
+              <div class="space-y-5 p-5">
+                <div>
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-brand-800">Diagnosis utama</h3>
+                  <p class="mt-2 rounded-2xl border border-brand-100/80 bg-brand-50/50 px-4 py-3 text-sm leading-relaxed text-ink-900"><%= patient.primary_diagnosis || '—' %></p>
+                </div>
+                <div>
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-brand-800">Diagnosis sekunder</h3>
+                  <p class="mt-2 whitespace-pre-line rounded-2xl border border-slate-100 bg-slate-50/50 px-4 py-3 text-sm leading-relaxed text-ink-800"><%= patient.secondary_diagnoses || '—' %></p>
+                </div>
+                <div>
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-brand-800">Riwayat jantung</h3>
+                  <p class="mt-2 whitespace-pre-line rounded-2xl border border-slate-100 bg-slate-50/50 px-4 py-3 text-sm leading-relaxed text-ink-800"><%= patient.cardiac_history || '—' %></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-surface glass-card overflow-hidden">
+              <div class="border-b border-slate-100 bg-gradient-to-r from-amber-50/60 to-transparent px-5 py-4">
+                <h2 class="flex items-center gap-2 text-lg font-extrabold text-ink-900">
+                  <span class="stat-icon !h-9 !w-9 !text-base !from-amber-50 !to-orange-50 !border-amber-200/60" aria-hidden="true">⚠️</span>
+                  Faktor risiko
+                </h2>
+                <p class="mt-1 text-xs text-ink-500">Hijau = tercatat pada formulir</p>
+              </div>
+              <div class="p-5">
+                <% const risks = [
+                  { label: 'Hipertensi', active: patient.has_hypertension },
+                  { label: 'Diabetes', active: patient.has_diabetes },
+                  { label: 'Dislipidemia', active: patient.has_dyslipidemia },
+                  { label: 'Merokok', active: patient.has_smoking },
+                  { label: 'Obesitas', active: patient.has_obesity },
+                  { label: 'Riwayat keluarga', active: patient.has_family_history },
+                  { label: 'CKD', active: patient.has_ckd },
+                  { label: 'Infark sebelumnya', active: patient.has_previous_mi },
+                  { label: 'Atrial fibrilasi', active: patient.has_atrial_fibrillation }
+                ]; %>
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  <% risks.forEach((r) => { %>
+                    <div class="flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-semibold transition <%= r.active ? 'border-emerald-300 bg-emerald-50/90 text-emerald-950' : 'border-slate-200 bg-slate-50/80 text-slate-400' %>">
+                      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs <%= r.active ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-500' %>"><%= r.active ? '✓' : '—' %></span>
+                      <%= r.label %>
+                    </div>
+                  <% }) %>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-surface glass-card overflow-hidden">
+              <div class="border-b border-slate-100 bg-gradient-to-r from-violet-50/50 to-transparent px-5 py-4">
+                <h2 class="flex items-center gap-2 text-lg font-extrabold text-ink-900">
+                  <span class="stat-icon !h-9 !w-9 !text-base !from-violet-50 !to-fuchsia-50 !border-violet-200/50" aria-hidden="true">💊</span>
+                  Obat
+                </h2>
+              </div>
+              <div class="p-5">
+                <% if (Array.isArray(medsJ) && medsJ.length) { %>
+                  <div class="overflow-x-auto rounded-2xl border border-violet-100/80 bg-white">
+                    <table class="min-w-full text-left text-sm">
+                      <thead class="bg-violet-50/80 text-xs font-bold uppercase tracking-wider text-violet-900">
+                        <tr>
+                          <th class="px-4 py-3">Nama</th>
+                          <th class="px-4 py-3">Dosis</th>
+                          <th class="px-4 py-3">Frekuensi</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100">
+                        <% medsJ.forEach(function (m) { %>
+                          <tr class="text-ink-800">
+                            <td class="px-4 py-3 font-medium"><%= m && m.name ? m.name : '—' %></td>
+                            <td class="px-4 py-3"><%= m && m.dose ? m.dose : '—' %></td>
+                            <td class="px-4 py-3"><%= m && m.frequency ? m.frequency : '—' %></td>
+                          </tr>
+                        <% }); %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% } else { %>
+                  <div class="whitespace-pre-line rounded-2xl border border-violet-100/80 bg-violet-50/30 px-4 py-4 text-sm leading-relaxed text-ink-900">
+                    <%= patient.medications || '—' %>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+
+            <% if (patient.form_type === 'cardiology') { %>
+            <div class="card-surface glass-card overflow-hidden">
+              <div class="border-b border-slate-100 bg-gradient-to-r from-sky-50/60 to-transparent px-5 py-4">
+                <h2 class="flex items-center gap-2 text-lg font-extrabold text-ink-900">
+                  <span class="stat-icon !h-9 !w-9 !text-base !from-sky-50 !to-cyan-50 !border-sky-200/50" aria-hidden="true">📋</span>
+                  Hasil pemeriksaan
+                </h2>
+              </div>
+              <div class="space-y-6 p-5">
+                <%- include('../../partials/exam_result_display', { title: 'ECG', ex: ecgEx }) %>
+                <%- include('../../partials/exam_result_display', { title: 'Ekokardiogram', ex: echoEx }) %>
+                <%- include('../../partials/exam_result_display', { title: 'Laboratorium', ex: labEx }) %>
+              </div>
+            </div>
+
+            <div class="card-surface glass-card overflow-hidden">
+              <div class="border-b border-slate-100 bg-gradient-to-r from-amber-50/50 to-transparent px-5 py-4">
+                <h2 class="flex items-center gap-2 text-lg font-extrabold text-ink-900">
+                  <span class="stat-icon !h-9 !w-9 !text-base !from-amber-50 !to-orange-50 !border-amber-200/60" aria-hidden="true">📅</span>
+                  Janji &amp; kontrol
+                </h2>
+              </div>
+              <div class="p-5">
+                <% if (Array.isArray(apptJ) && apptJ.length) { %>
+                  <ul class="space-y-3">
+                    <% apptJ.forEach(function (a) { %>
+                      <li class="rounded-2xl border border-amber-100/80 bg-amber-50/30 px-4 py-3 text-sm text-ink-800">
+                        <p class="font-semibold text-ink-900"><%= a && a.datetime ? a.datetime : '—' %></p>
+                        <% if (a && a.note) { %>
+                          <p class="mt-1 text-ink-700"><%= a.note %></p>
+                        <% } %>
+                      </li>
+                    <% }); %>
+                  </ul>
+                <% } else { %>
+                  <p class="text-sm text-ink-500">—</p>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="card-surface glass-card overflow-hidden">
+              <div class="border-b border-slate-100 bg-gradient-to-r from-emerald-50/50 to-transparent px-5 py-4">
+                <h2 class="flex items-center gap-2 text-lg font-extrabold text-ink-900">
+                  <span class="stat-icon !h-9 !w-9 !text-base !from-emerald-50 !to-teal-50 !border-emerald-200/50" aria-hidden="true">📝</span>
+                  Catatan klinis
+                </h2>
+              </div>
+              <div class="p-5">
+                <p class="whitespace-pre-line rounded-2xl border border-emerald-100/80 bg-emerald-50/25 px-4 py-4 text-sm leading-relaxed text-ink-900">
+                  <%= patient.clinical_notes || '—' %>
+                </p>
+              </div>
+            </div>
+            <% } %>
+            <% } %>
+
+          </div>
+        </div>
+      </div>
+
+  <%- include('../../partials/admin_shell_close') %>
+  <script>
+    (function () {
+      var root = document.getElementById('patient-visits-accordion');
+      if (!root) return;
+      var items = root.querySelectorAll('details.visit-accordion');
+      var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function scrollVisitToTop(detailEl) {
+        if (!detailEl || !detailEl.open) return;
+        var run = function () {
+          detailEl.scrollIntoView({
+            behavior: reduceMotion ? 'auto' : 'smooth',
+            block: 'start'
+          });
+        };
+        /* Biarkan layout / animasi satu frame sebelum scroll */
+        requestAnimationFrame(function () {
+          requestAnimationFrame(run);
+        });
+      }
+
+      items.forEach(function (el) {
+        el.addEventListener('toggle', function () {
+          if (!el.open) return;
+          items.forEach(function (other) {
+            if (other !== el) other.open = false;
+          });
+          scrollVisitToTop(el);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

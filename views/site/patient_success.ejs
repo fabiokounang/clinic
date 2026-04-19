@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../partials/site_chrome') %>
+
+  <main class="page-hero relative flex min-h-[calc(100vh-12rem)] items-center px-4 py-10 sm:px-6">
+    <div class="relative mx-auto w-full max-w-lg">
+      <div class="card-surface glass-card p-8 text-center animate-fadeUp sm:p-10">
+        <div
+          class="mx-auto flex h-20 w-20 items-center justify-center rounded-full text-3xl shadow-soft <%= success ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' %>"
+          aria-hidden="true"
+        >
+          <%= success ? '✓' : '!' %>
+        </div>
+
+        <h1 class="mt-6 text-2xl font-extrabold tracking-tight text-ink-900 sm:text-3xl">
+          <%= success ? 'Berhasil' : 'Terjadi masalah' %>
+        </h1>
+
+        <p class="mx-auto mt-4 max-w-md text-base leading-relaxed text-ink-600">
+          <%= message %>
+        </p>
+
+        <% if (success && typeof formShareUrl !== 'undefined' && formShareUrl) { %>
+          <div class="mt-8 rounded-2xl border border-brand-100 bg-brand-50/50 px-4 py-4 text-left text-sm text-ink-700">
+            <div class="font-bold text-ink-900">Bagikan tautan</div>
+            <p class="mt-1 text-xs text-ink-500">Salin atau kirim via WhatsApp.</p>
+            <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+              <button type="button" class="btn btn-secondary flex-1 justify-center text-sm" data-copy-url="<%= formShareUrl %>">Salin tautan</button>
+              <% if (typeof successWhatsAppUrl !== 'undefined' && successWhatsAppUrl) { %>
+                <a href="<%= successWhatsAppUrl %>" target="_blank" rel="noopener noreferrer" class="btn btn-secondary flex-1 justify-center border-emerald-200 bg-emerald-50/90 text-sm font-bold text-emerald-900 hover:bg-emerald-100">WhatsApp</a>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+
+        <div class="mt-10 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
+          <a href="/" class="btn btn-secondary w-full sm:w-auto">Beranda</a>
+          <a href="/admin/auth/login" class="btn btn-primary w-full sm:w-auto">Masuk staf</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('../partials/site_footer_min') %>
+  <script src="/js/share-links.js"></script>
+</body>
+</html>

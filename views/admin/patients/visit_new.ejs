@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%
+    const isCardio = patient.form_type === 'cardiology';
+    const cp = (typeof clinicalPrefill !== 'undefined' && clinicalPrefill) ? clinicalPrefill : {
+      medications: [{ name: '', dose: '', frequency: '' }],
+      ecg: { mode: 'text', text: '', pdf: '' },
+      echo: { mode: 'text', text: '', pdf: '' },
+      labs: { mode: 'text', text: '', pdf: '' },
+      appointments: [{ datetime: '', note: '' }],
+      clinical_notes: ''
+    };
+    function toDatetimeLocal(val) {
+      if (!val) return '';
+      const s = String(val).trim();
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)) return s.slice(0, 16);
+      const d = new Date(s);
+      if (Number.isNaN(d.getTime())) return '';
+      const pad = (n) => String(n).padStart(2, '0');
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+  %>
+
+  <%- include('../../partials/admin_shell_open', {
+    adminMainExtraClass: 'pb-28',
+    adminInnerClass: 'relative mx-auto max-w-6xl px-4 pb-8 pt-0 sm:px-6 lg:px-8'
+  }) %>
+
+      <div class="animate-fadeUp">
+        <%- include('../../partials/flash') %>
+
+        <div class="mb-6 flex flex-wrap items-center gap-2">
+          <span class="rounded-full bg-brand-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-brand-800">
+            <%= patient.form_type %>
+          </span>
+          <span class="rounded-full bg-ink-100 px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.08em] text-ink-600">
+            <%= patient.patient_code %>
+          </span>
+        </div>
+
+        <form action="/admin/patients/<%= patient.id %>/visits" method="POST" enctype="multipart/form-data" class="js-submit-form space-y-8">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+          <section class="card-surface glass-card p-5 sm:p-6">
+            <div class="mb-4">
+              <label class="field-label" for="vn-visited">Tanggal kunjungan</label>
+              <input
+                id="vn-visited"
+                type="date"
+                name="visited_at"
+                class="field-input max-w-xs"
+                value="<%= new Date().toISOString().slice(0, 10) %>"
+                required
+              >
+            </div>
+          </section>
+
+          <% if (isCardio) { %>
+
+          <section class="card-surface glass-card p-5 sm:p-6">
+            <div class="mb-6 flex items-center gap-3">
+              <div class="stat-icon" aria-hidden="true">🫀</div>
+              <div>
+                <h2 class="text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">Diagnosis &amp; riwayat</h2>
+                <p class="text-sm text-ink-500">Diagnosis dan riwayat kardiologi.</p>
+              </div>
+            </div>
+
+            <div class="grid gap-5">
+              <div>
+                <label class="field-label" for="ed-primary">Diagnosis utama</label>
+                <input id="ed-primary" type="text" name="primary_diagnosis" class="field-input" value="<%= formPatient.primary_diagnosis || '' %>">
+              </div>
+
+              <div>
+                <label class="field-label" for="ed-secondary">Diagnosis sekunder</label>
+                <textarea id="ed-secondary" name="secondary_diagnoses" class="field-textarea"><%= formPatient.secondary_diagnoses || '' %></textarea>
+              </div>
+
+              <div>
+                <label class="field-label" for="ed-cardiac">Riwayat jantung</label>
+                <textarea id="ed-cardiac" name="cardiac_history" class="field-textarea"><%= formPatient.cardiac_history || '' %></textarea>
+              </div>
+            </div>
+          </section>
+
+          <section class="card-surface glass-card p-5 sm:p-6">
+            <div class="mb-6 flex items-center gap-3">
+              <div class="stat-icon" aria-hidden="true">⚠️</div>
+              <div>
+                <h2 class="text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">Faktor risiko</h2>
+                <p class="text-sm text-ink-500">Pilih yang sesuai.</p>
+              </div>
+            </div>
+
+            <div class="chips-risk">
+              <label class="chip chip-compact">
+                <input class="chip-input" type="checkbox" name="has_hypertension" <%= formPatient.has_hypertension ? 'checked' : '' %>>
+                <span class="chip-label">Hipertensi</span>
+              </label>
+
+              <label class="chip chip-compact">
+                <input class="chip-input" type="checkbox" name="has_diabetes" <%= formPatient.has_diabetes ? 'checked' : '' %>>
+                <span class="chip-label">Diabetes</span>
+              </label>
+
+              <label class="chip chip-compact">
+                <input class="chip-input" type="checkbox" name="has_dyslipidemia" <%= formPatient.has_dyslipidemia ? 'checked' : '' %>>
+                <span class="chip-label">Dislipidemia</span>
+              </label>
+
+              <label class="chip chip-compact">
+                <input class="chip-input" type="checkbox" name="has_smoking" <%= formPatient.has_smoking ? 'checked' : '' %>>
+                <span class="chip-label">Merokok</span>
+              </label>
+
+              <label class="chip chip-compact">
+                <input class="chip-input" type="checkbox" name="has_obesity" <%= formPatient.has_obesity ? 'checked' : '' %>>
+                <span class="chip-label">Obesitas</span>
+              </label>
+
+              <label class="chip chip-compact">
+                <input class="chip-input" type="checkbox" name="has_family_history" <%= formPatient.has_family_history ? 'checked' : '' %>>
+                <span class="chip-label">Riwayat keluarga</span>
+              </label>
+
+              <label class="chip chip-compact">
+                <input class="chip-input" type="checkbox" name="has_ckd" <%= formPatient.has_ckd ? 'checked' : '' %>>
+                <span class="chip-label">CKD</span>
+              </label>
+
+              <label class="chip chip-compact">
+                <input class="chip-input" type="checkbox" name="has_previous_mi" <%= formPatient.has_previous_mi ? 'checked' : '' %>>
+                <span class="chip-label">Infark sebelumnya</span>
+              </label>
+
+              <label class="chip chip-compact">
+                <input class="chip-input" type="checkbox" name="has_atrial_fibrillation" <%= formPatient.has_atrial_fibrillation ? 'checked' : '' %>>
+                <span class="chip-label">Atrial fibrilasi</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="card-surface glass-card p-5 sm:p-6">
+            <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="stat-icon" aria-hidden="true">💊</div>
+                <div>
+                  <h2 class="text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">Obat</h2>
+                  <p class="text-sm text-ink-500">Satu baris per obat.</p>
+                </div>
+              </div>
+              <button type="button" class="text-sm font-bold text-brand-800 underline decoration-brand-300 underline-offset-2" data-clinical-add="#med-rows-ed">+ Tambah obat</button>
+            </div>
+
+            <div id="med-rows-ed" class="space-y-4">
+              <% cp.medications.forEach(function (row) { %>
+                <div class="rounded-2xl border border-slate-100 bg-slate-50/40 p-4" data-clinical-row>
+                  <div class="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <label class="field-label">Nama obat</label>
+                      <input type="text" name="med_name" class="field-input" value="<%= row.name || '' %>">
+                    </div>
+                    <div>
+                      <label class="field-label">Dosis</label>
+                      <input type="text" name="med_dose" class="field-input" value="<%= row.dose || '' %>">
+                    </div>
+                    <div>
+                      <label class="field-label">Frekuensi</label>
+                      <input type="text" name="med_freq" class="field-input" value="<%= row.frequency || '' %>">
+                    </div>
+                  </div>
+                  <div class="mt-3 flex justify-end">
+                    <button type="button" class="text-xs font-semibold text-ink-500 hover:text-rose-600" data-clinical-remove>Hapus baris</button>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          </section>
+
+          <section class="card-surface glass-card p-5 sm:p-6">
+            <div class="mb-6 flex items-center gap-3">
+              <div class="stat-icon" aria-hidden="true">📋</div>
+              <div>
+                <h2 class="text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">Hasil pemeriksaan</h2>
+                <p class="text-sm text-ink-500">Tulis kesimpulan atau unggah PDF per jenis pemeriksaan.</p>
+              </div>
+            </div>
+
+            <div class="space-y-6">
+              <%- include('../../partials/exam_block', { key: 'ecg', title: 'ECG', hint: 'Elektrokardiogram', exam: cp.ecg }) %>
+              <%- include('../../partials/exam_block', { key: 'echo', title: 'Ekokardiogram', hint: 'Echo jantung', exam: cp.echo }) %>
+              <%- include('../../partials/exam_block', { key: 'lab', title: 'Laboratorium', hint: 'Hasil lab terkait', exam: cp.labs }) %>
+            </div>
+          </section>
+
+          <section class="card-surface glass-card p-5 sm:p-6">
+            <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="stat-icon" aria-hidden="true">📅</div>
+                <div>
+                  <h2 class="text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">Janji &amp; kontrol</h2>
+                  <p class="text-sm text-ink-500">Follow-up dan rujukan.</p>
+                </div>
+              </div>
+              <button type="button" class="text-sm font-bold text-brand-800 underline decoration-brand-300 underline-offset-2" data-clinical-add="#appt-rows-ed">+ Tambah janji</button>
+            </div>
+
+            <div id="appt-rows-ed" class="space-y-4">
+              <% cp.appointments.forEach(function (a) { %>
+                <div class="rounded-2xl border border-slate-100 bg-slate-50/40 p-4" data-clinical-row>
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label class="field-label">Tanggal &amp; waktu</label>
+                      <input type="datetime-local" name="appt_datetime" class="field-input" value="<%= toDatetimeLocal(a.datetime) %>">
+                    </div>
+                    <div class="md:col-span-2">
+                      <label class="field-label">Catatan</label>
+                      <input type="text" name="appt_note" class="field-input" value="<%= a.note || '' %>">
+                    </div>
+                  </div>
+                  <div class="mt-3 flex justify-end">
+                    <button type="button" class="text-xs font-semibold text-ink-500 hover:text-rose-600" data-clinical-remove>Hapus baris</button>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          </section>
+
+          <section class="card-surface glass-card p-5 sm:p-6">
+            <div class="mb-6 flex items-center gap-3">
+              <div class="stat-icon" aria-hidden="true">📝</div>
+              <div>
+                <h2 class="text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">Catatan klinis</h2>
+                <p class="text-sm text-ink-500">Observasi dan rencana perawatan.</p>
+              </div>
+            </div>
+            <textarea name="clinical_notes" class="field-textarea min-h-[160px]"><%= cp.clinical_notes || '' %></textarea>
+          </section>
+
+          <% } else { %>
+
+          <section class="card-surface glass-card p-5 sm:p-6">
+            <p class="text-sm text-ink-600">Pasien ini memakai jenis form <strong><%= patient.form_type %></strong>. Kolom kardiologi mendalam tidak ditampilkan di sini.</p>
+          </section>
+
+          <% } %>
+
+          <div class="sticky bottom-3 z-20 rounded-[1.5rem] border border-white/70 bg-white/95 p-4 shadow-cozy backdrop-blur-sm">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <a href="/admin/patients/<%= patient.id %>" class="btn btn-secondary w-full justify-center sm:w-auto">
+                Batal
+              </a>
+
+              <button
+                type="submit"
+                class="js-submit-button btn btn-primary w-full px-6 sm:w-auto"
+                data-loading-text="Menyimpan…"
+              >
+                Simpan kunjungan
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+  <%- include('../../partials/admin_shell_close') %>
+  <% if (isCardio) { %>
+  <script src="/js/cardiology-form.js"></script>
+  <% } %>
+</body>
+</html>

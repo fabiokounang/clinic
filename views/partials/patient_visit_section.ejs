@@ -1,0 +1,199 @@
+<% 
+  const visitDateStr = visit.visited_at
+    ? new Date(visit.visited_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '—';
+  const medsJv = jparse(visit.medications_json);
+  const ecgV = examShow(visit.ecg_results);
+  const echoV = examShow(visit.echo_results);
+  const labV = examShow(visit.lab_results);
+  const apptJv = jparse(visit.appointments_json);
+  const openAttr = typeof visitOpenDefault !== 'undefined' && visitOpenDefault;
+%>
+<details
+  id="visit-<%= visit.id %>"
+  class="visit-accordion group scroll-mt-20 overflow-hidden rounded-xl border border-brand-200/50 bg-white/80 shadow-sm ring-1 ring-slate-900/[0.03]"
+  <% if (openAttr) { %>open<% } %>
+>
+  <summary class="flex cursor-pointer list-none flex-col gap-2 rounded-t-[0.7rem] p-2.5 marker:content-none outline-none transition-colors hover:bg-brand-50/50 focus-visible:ring-2 focus-visible:ring-brand-400/40 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-3 sm:py-2.5 [&::-webkit-details-marker]:hidden">
+    <div class="flex min-w-0 flex-1 items-start gap-2">
+      <span
+        class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-100/90 text-[0.65rem] font-bold text-brand-800 ring-1 ring-brand-200/60 transition-transform duration-300 ease-out group-open:rotate-90 motion-reduce:transition-none"
+        aria-hidden="true"
+      >▸</span>
+      <div class="min-w-0">
+        <h2 class="text-sm font-extrabold leading-tight tracking-tight text-ink-900 sm:text-[0.95rem]">Kunjungan ke-<%= visit.visit_number %></h2>
+        <p class="mt-0.5 text-[0.7rem] text-ink-500"><span class="text-ink-600"><%= visitDateStr %></span></p>
+      </div>
+    </div>
+    <div class="flex shrink-0 flex-wrap items-center gap-1 pl-8 sm:pl-0" onclick="event.stopPropagation()">
+      <a href="/admin/patients/<%= patient.id %>/visits/<%= visit.id %>/export/excel" class="inline-flex min-h-0 items-center rounded-md border border-ink-200/90 bg-white px-2 py-1 text-[0.65rem] font-bold text-ink-800 shadow-sm hover:bg-brand-50/80">Excel</a>
+      <a href="/admin/patients/<%= patient.id %>/visits/<%= visit.id %>/export/pdf" class="inline-flex min-h-0 items-center rounded-md bg-gradient-to-b from-brand-700 to-brand-800 px-2 py-1 text-[0.65rem] font-bold text-white shadow-sm hover:from-brand-600 hover:to-brand-700">PDF</a>
+      <a
+        href="/admin/patients/<%= patient.id %>/edit?visit_id=<%= visit.id %>"
+        class="inline-flex min-h-0 items-center rounded-md border border-ink-200/90 bg-white px-2 py-1 text-[0.65rem] font-bold text-ink-800 hover:bg-brand-50/80"
+      >Edit</a>
+      <form
+        action="/admin/patients/<%= patient.id %>/visits/<%= visit.id %>/delete"
+        method="POST"
+        class="m-0 inline js-submit-form"
+        onsubmit="return confirm('Hapus kunjungan ke-<%= visit.visit_number %>? Data kunjungan ini akan dihapus secara permanen.')"
+      >
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit" class="js-submit-button inline-flex min-h-0 items-center rounded-md border border-rose-200 bg-white px-2 py-1 text-[0.65rem] font-bold text-rose-700 hover:bg-rose-50" data-loading-text="Menghapus…">
+          Hapus
+        </button>
+      </form>
+    </div>
+  </summary>
+
+  <div class="visit-acc-slide">
+    <div class="min-h-0 overflow-hidden">
+  <div class="space-y-3 border-t border-brand-100/70 bg-white/35 px-3 pb-3 pt-2 sm:px-3.5">
+  <div class="card-surface glass-card overflow-hidden border border-brand-100/80">
+    <div class="border-b border-slate-100 bg-gradient-to-r from-brand-50/80 to-transparent px-3 py-2">
+      <h3 class="flex items-center gap-1.5 text-sm font-extrabold text-ink-900">
+        <span class="stat-icon !h-6 !w-6 !text-[0.7rem]" aria-hidden="true">🫀</span>
+        Diagnosis &amp; riwayat
+      </h3>
+    </div>
+    <div class="space-y-2.5 p-3">
+      <div>
+        <h4 class="text-[0.65rem] font-bold uppercase tracking-wider text-brand-800">Diagnosis utama</h4>
+        <p class="mt-1 rounded-lg border border-brand-100/80 bg-brand-50/50 px-2.5 py-2 text-xs leading-relaxed text-ink-900"><%= visit.primary_diagnosis || '—' %></p>
+      </div>
+      <div>
+        <h4 class="text-[0.65rem] font-bold uppercase tracking-wider text-brand-800">Diagnosis sekunder</h4>
+        <p class="mt-1 whitespace-pre-line rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-2 text-xs leading-relaxed text-ink-800"><%= visit.secondary_diagnoses || '—' %></p>
+      </div>
+      <div>
+        <h4 class="text-[0.65rem] font-bold uppercase tracking-wider text-brand-800">Riwayat jantung</h4>
+        <p class="mt-1 whitespace-pre-line rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-2 text-xs leading-relaxed text-ink-800"><%= visit.cardiac_history || '—' %></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-surface glass-card overflow-hidden border border-amber-100/80">
+    <div class="border-b border-slate-100 bg-gradient-to-r from-amber-50/60 to-transparent px-3 py-2">
+      <h3 class="flex items-center gap-1.5 text-sm font-extrabold text-ink-900">
+        <span class="stat-icon !h-6 !w-6 !text-[0.7rem] !from-amber-50 !to-orange-50 !border-amber-200/60" aria-hidden="true">⚠️</span>
+        Faktor risiko
+      </h3>
+    </div>
+    <div class="p-3">
+      <% const risks = [
+        { label: 'Hipertensi', active: visit.has_hypertension },
+        { label: 'Diabetes', active: visit.has_diabetes },
+        { label: 'Dislipidemia', active: visit.has_dyslipidemia },
+        { label: 'Merokok', active: visit.has_smoking },
+        { label: 'Obesitas', active: visit.has_obesity },
+        { label: 'Riwayat keluarga', active: visit.has_family_history },
+        { label: 'CKD', active: visit.has_ckd },
+        { label: 'Infark sebelumnya', active: visit.has_previous_mi },
+        { label: 'Atrial fibrilasi', active: visit.has_atrial_fibrillation }
+      ]; %>
+      <div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2 xl:grid-cols-3">
+        <% risks.forEach((r) => { %>
+          <div class="flex items-center gap-2 rounded-lg border px-2 py-1.5 text-xs font-semibold transition <%= r.active ? 'border-emerald-300 bg-emerald-50/90 text-emerald-950' : 'border-slate-200 bg-slate-50/80 text-slate-400' %>">
+            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[0.65rem] <%= r.active ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-500' %>"><%= r.active ? '✓' : '—' %></span>
+            <%= r.label %>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-surface glass-card overflow-hidden border border-violet-100/80">
+    <div class="border-b border-slate-100 bg-gradient-to-r from-violet-50/50 to-transparent px-3 py-2">
+      <h3 class="flex items-center gap-1.5 text-sm font-extrabold text-ink-900">
+        <span class="stat-icon !h-6 !w-6 !text-[0.7rem] !from-violet-50 !to-fuchsia-50 !border-violet-200/50" aria-hidden="true">💊</span>
+        Obat
+      </h3>
+    </div>
+    <div class="p-3">
+      <% if (Array.isArray(medsJv) && medsJv.length) { %>
+        <div class="overflow-x-auto rounded-lg border border-violet-100/80 bg-white">
+          <table class="min-w-full text-left text-xs">
+            <thead class="bg-violet-50/80 text-[0.65rem] font-bold uppercase tracking-wider text-violet-900">
+              <tr>
+                <th class="px-2 py-1.5">Nama</th>
+                <th class="px-2 py-1.5">Dosis</th>
+                <th class="px-2 py-1.5">Frekuensi</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <% medsJv.forEach(function (m) { %>
+                <tr class="text-ink-800">
+                  <td class="px-2 py-1.5 font-medium"><%= m && m.name ? m.name : '—' %></td>
+                  <td class="px-2 py-1.5"><%= m && m.dose ? m.dose : '—' %></td>
+                  <td class="px-2 py-1.5"><%= m && m.frequency ? m.frequency : '—' %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="whitespace-pre-line rounded-lg border border-violet-100/80 bg-violet-50/30 px-2.5 py-2 text-xs leading-relaxed text-ink-900">
+          <%= visit.medications || '—' %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (patient.form_type === 'cardiology') { %>
+  <div class="card-surface glass-card overflow-hidden border border-sky-100/80">
+    <div class="border-b border-slate-100 bg-gradient-to-r from-sky-50/60 to-transparent px-3 py-2">
+      <h3 class="flex items-center gap-1.5 text-sm font-extrabold text-ink-900">
+        <span class="stat-icon !h-6 !w-6 !text-[0.7rem] !from-sky-50 !to-cyan-50 !border-sky-200/50" aria-hidden="true">📋</span>
+        Hasil pemeriksaan
+      </h3>
+    </div>
+    <div class="space-y-3 p-3">
+      <%- include('./exam_result_display', { title: 'ECG', ex: ecgV }) %>
+      <%- include('./exam_result_display', { title: 'Ekokardiogram', ex: echoV }) %>
+      <%- include('./exam_result_display', { title: 'Laboratorium', ex: labV }) %>
+    </div>
+  </div>
+
+  <div class="card-surface glass-card overflow-hidden border border-amber-100/80">
+    <div class="border-b border-slate-100 bg-gradient-to-r from-amber-50/50 to-transparent px-3 py-2">
+      <h3 class="flex items-center gap-1.5 text-sm font-extrabold text-ink-900">
+        <span class="stat-icon !h-6 !w-6 !text-[0.7rem] !from-amber-50 !to-orange-50 !border-amber-200/60" aria-hidden="true">📅</span>
+        Janji &amp; kontrol
+      </h3>
+    </div>
+    <div class="p-3">
+      <% if (Array.isArray(apptJv) && apptJv.length) { %>
+        <ul class="space-y-2">
+          <% apptJv.forEach(function (a) { %>
+            <li class="rounded-lg border border-amber-100/80 bg-amber-50/30 px-2.5 py-2 text-xs text-ink-800">
+              <p class="font-semibold text-ink-900"><%= a && a.datetime ? a.datetime : '—' %></p>
+              <% if (a && a.note) { %>
+                <p class="mt-0.5 text-ink-700"><%= a.note %></p>
+              <% } %>
+            </li>
+          <% }); %>
+        </ul>
+      <% } else { %>
+        <p class="text-xs text-ink-500">—</p>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card-surface glass-card overflow-hidden border border-emerald-100/80">
+    <div class="border-b border-slate-100 bg-gradient-to-r from-emerald-50/50 to-transparent px-3 py-2">
+      <h3 class="flex items-center gap-1.5 text-sm font-extrabold text-ink-900">
+        <span class="stat-icon !h-6 !w-6 !text-[0.7rem] !from-emerald-50 !to-teal-50 !border-emerald-200/50" aria-hidden="true">📝</span>
+        Catatan klinis
+      </h3>
+    </div>
+    <div class="p-3">
+      <p class="whitespace-pre-line rounded-lg border border-emerald-100/80 bg-emerald-50/25 px-2.5 py-2 text-xs leading-relaxed text-ink-900">
+        <%= visit.clinical_notes || '—' %>
+      </p>
+    </div>
+  </div>
+  <% } %>
+  </div>
+    </div>
+  </div>
+</details>

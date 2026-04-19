@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../partials/site_chrome', { hubMode: true }) %>
+
+  <main class="page-hero relative pb-16">
+    <div class="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl text-center animate-fadeUp">
+        <p class="trust-badge mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-brand-900 shadow-soft">
+          <span aria-hidden="true">🔗</span>
+          Tautan untuk pasien
+        </p>
+
+        <h2 class="text-2xl font-extrabold tracking-tight text-ink-900 sm:text-3xl">
+          Bagikan informasi layanan
+        </h2>
+        <p class="mt-3 text-sm leading-relaxed text-ink-600 sm:text-base">
+          Halaman yang dibagikan ke pasien <strong class="text-ink-800">tidak berisi formulir data medis</strong> — hanya pengantar informasi dan keamanan data. Rekam medis diinput oleh <strong class="text-ink-800">dokter / petugas klinik</strong> melalui akun internal.
+        </p>
+        <p class="mt-4 rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-xs text-ink-600 sm:text-sm">
+          Untuk menambah atau mengubah data pasien: gunakan menu <a href="/admin/dashboard" class="font-semibold text-brand-800 underline decoration-brand-300 underline-offset-2">Dashboard</a> atau <a href="/admin/patients/new" class="font-semibold text-brand-800 underline decoration-brand-300 underline-offset-2">Tambah pasien</a> (akun staf).
+        </p>
+      </div>
+
+      <div class="mx-auto mt-12 grid max-w-4xl gap-6 sm:grid-cols-2">
+        <% (formCards || []).forEach((item, index) => { %>
+          <article
+            class="card-surface glass-card flex flex-col overflow-hidden p-6 transition duration-300 animate-fadeUp"
+            style="animation-delay: <%= index * 70 %>ms;"
+          >
+            <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-100 to-brand-200/90 text-2xl shadow-soft" aria-hidden="true">
+              🏥
+            </div>
+
+            <h3 class="text-xl font-extrabold tracking-tight text-ink-900"><%= item.name %></h3>
+            <p class="mt-2 flex-1 text-sm leading-relaxed text-ink-600"><%= item.description %></p>
+
+            <div class="mt-6 flex flex-col gap-3">
+              <a
+                href="<%= item.infoUrl %>"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-primary w-full justify-center text-center shadow-cozy"
+              >
+                Pratinjau halaman pasien · tab baru
+              </a>
+
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  class="btn btn-secondary w-full justify-center text-sm"
+                  data-copy-url="<%= item.infoUrl %>"
+                >
+                  Salin tautan
+                </button>
+                <a
+                  href="<%= item.waHref %>"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-secondary w-full justify-center border-emerald-200 bg-emerald-50/80 text-sm font-bold text-emerald-900 hover:bg-emerald-100"
+                >
+                  WhatsApp
+                </a>
+              </div>
+
+              <p class="text-center font-mono text-[0.65rem] leading-snug text-ink-400 break-all sm:text-xs">
+                <%= item.infoUrl %>
+              </p>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+
+      <% if (!(formCards || []).length) { %>
+        <div class="mx-auto mt-10 max-w-lg rounded-2xl border border-amber-200 bg-amber-50 px-6 py-5 text-center text-sm text-amber-900">
+          Belum ada tipe layanan aktif. Jalankan seed atau tambahkan data di tabel <code class="rounded bg-white/80 px-1.5 py-0.5">form_types</code>.
+        </div>
+      <% } %>
+    </div>
+  </main>
+
+  <%- include('../partials/site_footer_min') %>
+  <script src="/js/share-links.js"></script>
+</body>
+</html>

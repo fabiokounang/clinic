@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../../partials/admin_shell_open', {
+    adminInnerClass: 'relative mx-auto max-w-4xl px-4 pb-8 pt-0 sm:px-6 lg:px-8'
+  }) %>
+
+      <div class="animate-fadeUp">
+        <%- include('../../partials/flash') %>
+
+        <% if (!(formTypes || []).length) { %>
+          <div class="card-surface glass-card p-8 text-center">
+            <p class="text-sm text-ink-600">Belum ada jenis form aktif.</p>
+            <a href="/admin/patients" class="btn btn-primary mt-4 inline-flex">Kembali ke daftar</a>
+          </div>
+        <% } else { %>
+          <ul class="grid gap-4 sm:grid-cols-2">
+            <% formTypes.forEach(function (ft) { %>
+              <li>
+                <a
+                  href="/admin/patients/new?form_type=<%= encodeURIComponent(ft.slug) %>"
+                  class="card-surface glass-card flex h-full flex-col p-5 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+                >
+                  <span class="text-xs font-bold uppercase tracking-[0.14em] text-brand-700"><%= ft.slug %></span>
+                  <span class="mt-2 text-lg font-extrabold text-ink-900"><%= ft.name %></span>
+                  <% if (ft.description) { %>
+                    <span class="mt-2 text-sm leading-relaxed text-ink-600"><%= ft.description %></span>
+                  <% } %>
+                  <span class="mt-4 text-sm font-bold text-brand-800">Lanjut isi data →</span>
+                </a>
+              </li>
+            <% }); %>
+          </ul>
+        <% } %>
+      </div>
+
+  <%- include('../../partials/admin_shell_close') %>
+</body>
+</html>

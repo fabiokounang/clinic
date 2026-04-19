@@ -1,0 +1,66 @@
+<%#
+  locals: key ('ecg'|'echo'|'lab'), title, hint, exam: { mode, text, pdf }
+%>
+<div class="rounded-2xl border border-slate-100 bg-slate-50/40 p-4 sm:p-5" data-exam-block="<%= key %>">
+  <div class="mb-3">
+    <h3 class="text-sm font-extrabold uppercase tracking-[0.14em] text-brand-900"><%= title %></h3>
+    <% if (hint) { %>
+      <p class="mt-1 text-xs text-ink-500"><%= hint %></p>
+    <% } %>
+  </div>
+
+  <div class="flex flex-wrap gap-4">
+    <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-ink-800 shadow-sm transition hover:border-brand-200">
+      <input
+        type="radio"
+        name="<%= key %>_mode"
+        value="text"
+        class="text-brand-700 focus:ring-brand-500"
+        <%= exam.mode !== 'pdf' ? 'checked' : '' %>
+        data-exam-mode
+      >
+      Tulis kesimpulan
+    </label>
+    <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-ink-800 shadow-sm transition hover:border-brand-200">
+      <input
+        type="radio"
+        name="<%= key %>_mode"
+        value="pdf"
+        class="text-brand-700 focus:ring-brand-500"
+        <%= exam.mode === 'pdf' ? 'checked' : '' %>
+        data-exam-mode
+      >
+      Unggah PDF
+    </label>
+  </div>
+
+  <input type="hidden" name="<%= key %>_existing_pdf" value="<%= exam.pdf || '' %>">
+
+  <div class="exam-panel-text mt-4 <%= exam.mode === 'pdf' ? 'hidden' : '' %>" data-exam-panel="text">
+    <span class="field-label">Kesimpulan / ringkasan</span>
+    <textarea
+      name="<%= key %>_text"
+      class="field-textarea min-h-[100px]"
+      placeholder="Tulis temuan singkat, tanggal pemeriksaan, atau kesimpulan…"
+    ><%= exam.text || '' %></textarea>
+    <p class="mt-2 text-xs text-ink-500">Boleh dikosongkan jika Anda memilih unggah PDF.</p>
+  </div>
+
+  <div class="exam-panel-pdf mt-4 <%= exam.mode === 'pdf' ? '' : 'hidden' %>" data-exam-panel="pdf">
+    <span class="field-label">Berkas PDF</span>
+    <input
+      type="file"
+      name="<%= key %>_pdf"
+      accept="application/pdf,.pdf"
+      class="field-input !min-h-[52px] cursor-pointer py-3 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-900 hover:file:bg-brand-100"
+    >
+    <p class="mt-2 text-xs text-ink-500">Maks. 12 MB. Hanya format PDF.</p>
+    <% if (exam.pdf) { %>
+      <div class="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-brand-100 bg-white px-3 py-2 text-sm">
+        <span class="text-ink-600">Berkas tersimpan:</span>
+        <a href="<%= exam.pdf %>" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-800 underline decoration-brand-300 underline-offset-2">Buka PDF</a>
+        <span class="text-xs text-ink-400">(unggah baru untuk mengganti)</span>
+      </div>
+    <% } %>
+  </div>
+</div>

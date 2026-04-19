@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../partials/app_head', { title: title }) %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .dash-chart-wrap { position: relative; min-height: 220px; }
+    @media (min-width: 640px) {
+      .dash-chart-wrap { min-height: 260px; }
+    }
+  </style>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../partials/admin_shell_open') %>
+
+      <div class="animate-fadeUp">
+        <%- include('../partials/flash') %>
+
+        <p class="mb-6 max-w-2xl text-sm text-ink-600 sm:text-base">
+          Ringkasan klinis menyesuaikan <strong class="text-ink-800">rentang tanggal</strong> pendaftaran pasien. Gunakan preset atau pilih manual.
+        </p>
+
+        <section class="card-surface glass-card mb-6 p-4 sm:p-6">
+          <form method="GET" action="/admin/dashboard" class="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
+            <div class="grid flex-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label class="field-label" for="dash-from">Dari tanggal</label>
+                <input id="dash-from" type="date" name="from" class="field-input" value="<%= dateFrom %>" required>
+              </div>
+              <div>
+                <label class="field-label" for="dash-to">Sampai tanggal</label>
+                <input id="dash-to" type="date" name="to" class="field-input" value="<%= dateTo %>" required>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2 lg:pb-1">
+              <button type="submit" class="btn btn-primary px-5 py-2.5 text-sm">Terapkan</button>
+              <% const dashPreset = typeof activeDashboardPreset !== 'undefined' ? activeDashboardPreset : null; %>
+              <% function presetBtnClasses(key) { return dashPreset === key ? 'btn btn-primary px-3 py-2.5 text-xs sm:text-sm shadow-soft' : 'btn btn-secondary px-3 py-2.5 text-xs sm:text-sm'; } %>
+              <a href="/admin/dashboard<%= presetQs.last7 %>" class="<%= presetBtnClasses('last7') %>" <%= dashPreset === 'last7' ? 'aria-current="true"' : '' %>>7 hari</a>
+              <a href="/admin/dashboard<%= presetQs.last30 %>" class="<%= presetBtnClasses('last30') %>" <%= dashPreset === 'last30' ? 'aria-current="true"' : '' %>>30 hari</a>
+              <a href="/admin/dashboard<%= presetQs.thisMonth %>" class="<%= presetBtnClasses('thisMonth') %>" <%= dashPreset === 'thisMonth' ? 'aria-current="true"' : '' %>>Bulan ini</a>
+              <a href="/admin/dashboard<%= presetQs.thisYear %>" class="<%= presetBtnClasses('thisYear') %>" <%= dashPreset === 'thisYear' ? 'aria-current="true"' : '' %>>Tahun ini</a>
+            </div>
+          </form>
+          <p class="mt-3 text-xs text-ink-500">
+            Rentang aktif: <strong class="text-ink-700"><%= dateFrom %></strong> — <strong class="text-ink-700"><%= dateTo %></strong>
+            (<%= daysInRange %> hari kalender)
+          </p>
+        </section>
+
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <article class="card-surface glass-card flex flex-col p-5 sm:p-6">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-ink-500">Total rekam aktif</p>
+            <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink-900 sm:text-4xl"><%= totalActiveAllTime %></p>
+            <p class="mt-2 text-xs leading-relaxed text-ink-500">Seluruh waktu · tidak difilter tanggal</p>
+            <div class="mt-3 text-2xl opacity-40" aria-hidden="true">⚕️</div>
+          </article>
+
+          <article class="card-surface glass-card flex flex-col border-brand-200/50 p-5 sm:p-6">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-brand-800">Pendaftaran baru</p>
+            <p class="mt-2 text-3xl font-extrabold tabular-nums text-brand-900 sm:text-4xl"><%= newInRange %></p>
+            <p class="mt-2 text-xs leading-relaxed text-ink-500">Pasien baru dalam rentang tanggal di atas</p>
+            <div class="mt-3 text-2xl opacity-40" aria-hidden="true">📥</div>
+          </article>
+
+          <article class="card-surface glass-card flex flex-col p-5 sm:p-6">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-ink-500">Rata-rata / hari</p>
+            <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink-900 sm:text-4xl"><%= avgPerDay.toFixed(avgPerDay < 10 ? 2 : 1) %></p>
+            <p class="mt-2 text-xs leading-relaxed text-ink-500">Pendaftaran baru ÷ <%= daysInRange %> hari</p>
+            <div class="mt-3 text-2xl opacity-40" aria-hidden="true">📊</div>
+          </article>
+
+          <article class="card-surface glass-card flex flex-col p-5 sm:p-6">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-ink-500">Kardiologi (baru)</p>
+            <p class="mt-2 text-3xl font-extrabold tabular-nums text-ink-900 sm:text-4xl"><%= riskAgg.cardio_n %></p>
+            <p class="mt-2 text-xs leading-relaxed text-ink-500">Pasien form kardiologi dalam rentang</p>
+            <div class="mt-3 text-2xl opacity-40" aria-hidden="true">🫀</div>
+          </article>
+        </div>
+
+        <p class="mt-4 text-xs text-ink-500">
+          Pendaftaran hari ini (server): <strong class="text-ink-700"><%= stats.total_today != null ? stats.total_today : 0 %></strong>
+          · Mengacu tanggal kalender server, bukan filter di atas.
+        </p>
+
+        <div class="mt-8 grid gap-6 lg:grid-cols-2">
+          <div class="card-surface glass-card overflow-hidden p-4 sm:p-6">
+            <h2 class="text-lg font-extrabold text-ink-900">Tren pendaftaran harian</h2>
+            <p class="mt-1 text-xs text-ink-500">Jumlah pasien baru per hari dalam rentang</p>
+            <div class="dash-chart-wrap mt-4">
+              <canvas id="chartDaily" aria-label="Grafik pendaftaran harian"></canvas>
+            </div>
+          </div>
+
+          <div class="card-surface glass-card overflow-hidden p-4 sm:p-6">
+            <h2 class="text-lg font-extrabold text-ink-900">Jenis form (dalam rentang)</h2>
+            <p class="mt-1 text-xs text-ink-500">Proporsi pasien baru menurut tipe form</p>
+            <div class="dash-chart-wrap mt-4 flex items-center justify-center">
+              <% if ((formBreakdown || []).length && newInRange > 0) { %>
+                <canvas id="chartForm" class="max-h-[280px] max-w-[280px]" aria-label="Grafik jenis form"></canvas>
+              <% } else { %>
+                <p class="py-12 text-center text-sm text-ink-500">Belum ada pendaftaran dalam rentang ini.</p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <% if (riskAgg.cardio_n > 0) { %>
+        <section class="card-surface glass-card mt-8 p-4 sm:p-6">
+          <div class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+            <div>
+              <h2 class="text-lg font-extrabold text-ink-900">Faktor risiko · kardiologi</h2>
+              <p class="text-xs text-ink-500">
+                Pasien kardiologi baru dalam rentang: <strong><%= riskAgg.cardio_n %></strong>.
+                Angka per faktor = pasien yang dicentang (satu orang bisa punya beberapa faktor).
+              </p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <% riskItems.forEach(function (r) { %>
+              <% if (r.n > 0) { %>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50/90 px-3 py-1.5 text-xs font-semibold text-emerald-950">
+                  <span class="tabular-nums font-extrabold"><%= r.n %></span>
+                  <%= r.label %>
+                </span>
+              <% } %>
+            <% }); %>
+          </div>
+        </section>
+        <% } %>
+
+        <div class="mt-8 grid gap-6 lg:grid-cols-2">
+          <section class="card-surface glass-card overflow-hidden">
+            <div class="border-b border-slate-100 bg-gradient-to-r from-brand-50/80 to-transparent px-4 py-4 sm:px-5">
+              <h2 class="text-lg font-extrabold text-ink-900">Pasien terbaru (rentang)</h2>
+              <p class="text-xs text-ink-500">Urutan dari yang paling baru didaftarkan</p>
+            </div>
+            <ul class="divide-y divide-slate-100">
+              <% if ((recentInRange || []).length) { %>
+                <% recentInRange.forEach(function (p) { %>
+                  <li class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5">
+                    <div class="min-w-0">
+                      <a href="/admin/patients/<%= p.id %>" class="font-semibold text-brand-900 hover:underline">
+                        <%= p.first_name %> <%= p.last_name %>
+                      </a>
+                      <p class="text-xs text-ink-500">
+                        <span class="font-mono"><%= p.patient_code %></span>
+                        · <%= p.form_type %>
+                      </p>
+                    </div>
+                    <time class="shrink-0 text-xs text-ink-400" datetime="<%= p.created_at %>">
+                      <%= p.created_at ? new Date(p.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '—' %>
+                    </time>
+                  </li>
+                <% }); %>
+              <% } else { %>
+                <li class="px-4 py-8 text-center text-sm text-ink-500 sm:px-5">Tidak ada pendaftaran dalam rentang ini.</li>
+              <% } %>
+            </ul>
+            <div class="border-t border-slate-100 px-4 py-3 sm:px-5">
+              <a href="/admin/patients?form_type=" class="text-sm font-semibold text-brand-800 hover:underline">Lihat semua pasien →</a>
+            </div>
+          </section>
+
+          <section class="card-surface glass-card overflow-hidden">
+            <div class="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-transparent px-4 py-4 sm:px-5">
+              <h2 class="text-lg font-extrabold text-ink-900">Aktivitas sistem</h2>
+              <p class="text-xs text-ink-500">Log audit terbaru (ekspor, ubah data, dll.)</p>
+            </div>
+            <ul class="max-h-[min(420px,55vh)] divide-y divide-slate-100 overflow-y-auto">
+              <% if ((auditLogs || []).length) { %>
+                <% auditLogs.forEach(function (log) { %>
+                  <li class="px-4 py-3 sm:px-5">
+                    <p class="text-sm text-ink-800 line-clamp-2"><%= log.description || log.action %></p>
+                    <p class="mt-1 text-[0.7rem] text-ink-400">
+                      <%= log.module %> · <%= log.action %>
+                      · <%= log.created_at ? new Date(log.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '—' %>
+                    </p>
+                  </li>
+                <% }); %>
+              <% } else { %>
+                <li class="px-4 py-8 text-center text-sm text-ink-500">Belum ada log.</li>
+              <% } %>
+            </ul>
+          </section>
+        </div>
+
+        <% 
+          const genderRows = genderBreakdown || [];
+          const gMale = genderRows.find(function (x) { return x.gender === 'male'; });
+          const gFemale = genderRows.find(function (x) { return x.gender === 'female'; });
+          const gOther = genderRows.find(function (x) { return x.gender === 'other'; });
+          const gNull = genderRows.find(function (x) { return x.gender == null || x.gender === ''; });
+        %>
+        <section class="card-surface glass-card mt-8 p-4 sm:p-6">
+          <h2 class="text-lg font-extrabold text-ink-900">Ringkasan demografi (pendaftaran dalam rentang)</h2>
+          <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div class="rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-3 text-center">
+              <p class="text-xs font-bold text-ink-500">Laki-laki</p>
+              <p class="mt-1 text-xl font-extrabold tabular-nums text-ink-900"><%= gMale ? gMale.c : 0 %></p>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-3 text-center">
+              <p class="text-xs font-bold text-ink-500">Perempuan</p>
+              <p class="mt-1 text-xl font-extrabold tabular-nums text-ink-900"><%= gFemale ? gFemale.c : 0 %></p>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-3 text-center">
+              <p class="text-xs font-bold text-ink-500">Lainnya</p>
+              <p class="mt-1 text-xl font-extrabold tabular-nums text-ink-900"><%= gOther ? gOther.c : 0 %></p>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-3 text-center">
+              <p class="text-xs font-bold text-ink-500">Belum diisi</p>
+              <p class="mt-1 text-xl font-extrabold tabular-nums text-ink-900"><%= gNull ? gNull.c : 0 %></p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+  <%- include('../partials/admin_shell_close') %>
+
+  <script type="application/json" id="dash-chart-json"><%- JSON.stringify({
+    labels: chartDaily.labels,
+    values: chartDaily.values,
+    formLabels: chartFormMeta.labels,
+    formCounts: chartFormMeta.counts
+  }) %></script>
+  <script>
+    (function () {
+      function run() {
+        if (typeof Chart === 'undefined') {
+          setTimeout(run, 50);
+          return;
+        }
+        var el = document.getElementById('dash-chart-json');
+        if (!el) return;
+        var data;
+        try {
+          data = JSON.parse(el.textContent || '{}');
+        } catch (e) {
+          return;
+        }
+
+        var dailyCtx = document.getElementById('chartDaily');
+        if (dailyCtx && data.labels && data.labels.length) {
+          new Chart(dailyCtx, {
+            type: 'line',
+            data: {
+              labels: data.labels,
+              datasets: [{
+                label: 'Pasien baru',
+                data: data.values,
+                borderColor: 'rgb(13, 148, 136)',
+                backgroundColor: 'rgba(13, 148, 136, 0.12)',
+                fill: true,
+                tension: 0.25,
+                borderWidth: 2,
+                pointRadius: 2,
+                pointHoverRadius: 5
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: { mode: 'index', intersect: false }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { precision: 0 }
+                },
+                x: {
+                  ticks: { maxRotation: 45, minRotation: 0, autoSkip: true, maxTicksLimit: 14 }
+                }
+              }
+            }
+          });
+        }
+
+        var formCtx = document.getElementById('chartForm');
+        if (formCtx && data.formCounts && data.formCounts.length && data.formCounts.some(function (n) { return n > 0; })) {
+          new Chart(formCtx, {
+            type: 'doughnut',
+            data: {
+              labels: data.formLabels,
+              datasets: [{
+                data: data.formCounts,
+                backgroundColor: [
+                  'rgba(13, 148, 136, 0.85)',
+                  'rgba(14, 165, 233, 0.8)',
+                  'rgba(99, 102, 241, 0.75)',
+                  'rgba(245, 158, 11, 0.8)',
+                  'rgba(244, 63, 94, 0.75)'
+                ],
+                borderWidth: 0
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+              }
+            }
+          });
+        }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', run);
+      } else {
+        run();
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../partials/topbar', { admin: typeof admin !== 'undefined' ? admin : null }) %>
+
+  <main class="page-hero relative flex min-h-[calc(100vh-5rem)] items-center">
+    <div class="relative mx-auto w-full max-w-lg px-4 py-12 sm:px-6 lg:px-8">
+      <div class="card-surface glass-card p-8 text-center animate-fadeUp sm:p-10">
+        <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 text-2xl font-extrabold text-amber-900 shadow-soft" aria-hidden="true">
+          403
+        </div>
+
+        <h1 class="mt-6 text-2xl font-extrabold tracking-tight text-ink-900 sm:text-3xl">
+          Akses ditolak
+        </h1>
+
+        <p class="mx-auto mt-4 max-w-md text-base leading-relaxed text-ink-600">
+          Hanya superadmin yang dapat membuka halaman ini. Hubungi pengelola sistem jika Anda memerlukan akses.
+        </p>
+
+        <div class="mt-10 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
+          <a href="/admin/dashboard" class="btn btn-primary w-full sm:w-auto">Ke dashboard</a>
+          <a href="/admin/patients" class="btn btn-secondary w-full sm:w-auto">Daftar pasien</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

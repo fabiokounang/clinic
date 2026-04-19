@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../../partials/admin_shell_open', {
+    adminMainExtraClass: 'pb-16',
+    adminInnerClass: 'relative mx-auto max-w-xl px-4 pb-8 pt-0 sm:px-6 lg:px-8'
+  }) %>
+
+      <div class="animate-fadeUp">
+        <%- include('../../partials/flash') %>
+
+        <section class="card-surface glass-card overflow-hidden shadow-[0_12px_40px_rgba(15,23,42,0.07)] ring-1 ring-slate-900/[0.04]">
+          <div class="border-b border-brand-100/90 bg-gradient-to-br from-brand-50/95 via-white to-sky-50/50 px-5 py-3 sm:px-6 sm:py-4">
+            <h2 class="text-sm font-extrabold text-ink-900 sm:text-base">Data akun</h2>
+          </div>
+          <form action="/admin/users/new" method="POST" class="space-y-5 p-5 sm:p-6">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+            <div>
+              <label class="field-label" for="su-name">Nama</label>
+              <input id="su-name" name="name" type="text" class="field-input" required maxlength="120" value="<%= (old && old.name) || '' %>">
+            </div>
+
+            <div>
+              <label class="field-label" for="su-email">Email</label>
+              <input id="su-email" name="email" type="email" class="field-input" required autocomplete="off" value="<%= (old && old.email) || '' %>">
+            </div>
+
+            <div>
+              <label class="field-label" for="su-role">Peran</label>
+              <select id="su-role" name="role" class="field-select">
+                <option value="admin" <%= (old && old.role) === 'superadmin' ? '' : 'selected' %>>Admin</option>
+                <option value="superadmin" <%= (old && old.role) === 'superadmin' ? 'selected' : '' %>>Superadmin</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="field-label" for="su-password">Password</label>
+              <input id="su-password" name="password" type="password" class="field-input" required minlength="10" autocomplete="new-password" placeholder="Minimal 10 karakter">
+            </div>
+
+            <div>
+              <label class="field-label" for="su-password2">Konfirmasi password</label>
+              <input id="su-password2" name="password_confirm" type="password" class="field-input" required minlength="10" autocomplete="new-password">
+            </div>
+
+            <div class="flex flex-col gap-3 border-t border-ink-100/90 pt-5 sm:flex-row sm:justify-end">
+              <a href="/admin/users" class="btn btn-secondary order-2 w-full justify-center sm:order-1 sm:w-auto">Batal</a>
+              <button type="submit" class="btn btn-primary order-1 w-full justify-center sm:order-2 sm:w-auto">Simpan</button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+  <%- include('../../partials/admin_shell_close') %>
+</body>
+</html>
