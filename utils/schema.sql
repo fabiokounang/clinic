@@ -1,8 +1,58 @@
-CREATE DATABASE IF NOT EXISTS clinic_db
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
-USE clinic_db;
+-- =============================================================================
+-- Klinik / CardioBase — skema database FINAL (satu berkas)
+-- MySQL 5.7+ / 8.x atau MariaDB 10.3+ (JSON + InnoDB)
+-- Jalankan: mysql -u USER -p < utils/schema.sql
+-- Catatan: untuk upgrade DB lama, gunakan skrip di utils/migrations/ & scripts/
+-- =============================================================================
 
+CREATE DATABASE IF NOT EXISTS klinik_general
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE klinik_general;
+
+SET NAMES utf8mb4;
+
+-- -----------------------------------------------------------------------------
+-- 1. Pengguna panel staf (login admin)
+-- -----------------------------------------------------------------------------
+CREATE TABLE users (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(150) NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role ENUM('superadmin', 'admin') NOT NULL DEFAULT 'admin',
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_users_email (email),
+  KEY idx_users_role (role),
+  KEY idx_users_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Akun staf (admin / superadmin)';
+
+-- -----------------------------------------------------------------------------
+-- 2. Jenis form intake (dropdown "Tambah pasien")
+-- -----------------------------------------------------------------------------
+CREATE TABLE form_types (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  slug VARCHAR(50) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  description VARCHAR(255) DEFAULT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_form_types_slug (slug),
+  KEY idx_form_types_active_sort (is_active, sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Master jenis form pasien';
+
+-- -----------------------------------------------------------------------------
+-- 3. Pasien: identitas + soft delete + cache data klinis terbaru (sinkron dari kunjungan)
+-- -----------------------------------------------------------------------------
 CREATE TABLE patients (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   patient_code VARCHAR(30) NOT NULL,
@@ -50,9 +100,12 @@ CREATE TABLE patients (
   KEY idx_patients_phone (phone),
   KEY idx_patients_created_at (created_at),
   KEY idx_patients_deleted_at (deleted_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Pasien; kolom klinis = cache dari kunjungan terakhir / untuk daftar & ekspor';
 
--- Riwayat kunjungan klinis per pasien (kunjungan 1, 2, …); baris di `patients` tetap identitas + cache data terbaru.
+-- -----------------------------------------------------------------------------
+-- 4. Riwayat kunjungan klinis (kunjungan 1, 2, … per pasien)
+-- -----------------------------------------------------------------------------
 CREATE TABLE patient_visits (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   patient_id BIGINT UNSIGNED NOT NULL,
@@ -88,40 +141,13 @@ CREATE TABLE patient_visits (
   UNIQUE KEY uq_patient_visit_num (patient_id, visit_number),
   KEY idx_pv_patient (patient_id),
   KEY idx_pv_visited_at (visited_at),
-  CONSTRAINT fk_pv_patient FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  CONSTRAINT fk_pv_patient FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Satu baris per kunjungan; struktur klinis selaras dengan cache di patients';
 
-CREATE TABLE users (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  name VARCHAR(120) NOT NULL,
-  email VARCHAR(150) NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  role ENUM('superadmin', 'admin') NOT NULL DEFAULT 'admin',
-  is_active TINYINT(1) NOT NULL DEFAULT 1,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_users_email (email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE form_types (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  slug VARCHAR(50) NOT NULL,
-  name VARCHAR(100) NOT NULL,
-  description VARCHAR(255) DEFAULT NULL,
-  is_active TINYINT(1) NOT NULL DEFAULT 1,
-  sort_order INT NOT NULL DEFAULT 0,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_form_types_slug (slug),
-  KEY idx_form_types_active_sort (is_active, sort_order)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO form_types (slug, name, description, is_active, sort_order)
-VALUES
-('cardiology', 'Cardiology', 'Form untuk data pasien dan riwayat kardiologi.', 1, 1);
-
+-- -----------------------------------------------------------------------------
+-- 5. Audit log (aksi staf pada data)
+-- -----------------------------------------------------------------------------
 CREATE TABLE audit_logs (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id BIGINT UNSIGNED DEFAULT NULL,
@@ -136,5 +162,24 @@ CREATE TABLE audit_logs (
   PRIMARY KEY (id),
   KEY idx_audit_logs_module_record (module, record_id),
   KEY idx_audit_logs_user_id (user_id),
-  KEY idx_audit_logs_created_at (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  KEY idx_audit_logs_created_at (created_at),
+  CONSTRAINT fk_audit_logs_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Jejak perubahan; user_id NULL jika akun dihapus';
+
+-- -----------------------------------------------------------------------------
+-- 6. Data awal (idempotent)
+-- -----------------------------------------------------------------------------
+INSERT INTO form_types (slug, name, description, is_active, sort_order)
+VALUES ('cardiology', 'Cardiology', 'Form untuk data pasien dan riwayat kardiologi.', 1, 1)
+ON DUPLICATE KEY UPDATE
+  name = VALUES(name),
+  description = VALUES(description),
+  is_active = VALUES(is_active),
+  sort_order = VALUES(sort_order);
+
+-- Akun staf: gunakan `npm run seed:admin` (bcrypt). Tidak dimasukkan di sini.
+
+-- =============================================================================
+-- Selesai. Tabel: users, form_types, patients, patient_visits, audit_logs
+-- =============================================================================

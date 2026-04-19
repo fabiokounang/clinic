@@ -100,7 +100,7 @@ app.use((error, req, res, next) => {
   const isProd = process.env.NODE_ENV === 'production';
   const sqlHint =
     error.sqlMessage || error.code === 'ER_ACCESS_DENIED_ERROR' || error.code === 'ECONNREFUSED'
-      ? ' Periksa .env (DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME) dan pastikan MySQL jalan.'
+      ? ' Periksa .env (DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME) dan pastikan MySQL jalan. TiDB Cloud: set NODE_ENV=production atau DB_SSL=true agar koneksi memakai TLS.'
       : '';
 
   console.error('Unhandled error:', error.message || error);
