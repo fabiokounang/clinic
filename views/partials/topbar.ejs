@@ -1,6 +1,7 @@
 <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-md shadow-soft">
   <%
     const ap = typeof adminPath !== 'undefined' ? String(adminPath || '') : '';
+    const _csrfToken = typeof csrfToken !== 'undefined' ? csrfToken : '';
     const hideStaffLoginCta =
       ap === '/' || ap.indexOf('/admin/auth/login') === 0;
     const navDash = !!admin && ap === '/admin/dashboard';
@@ -33,16 +34,20 @@
           <a href="/admin/users" class="<%= navClass(navUsers) %>">Kelola staf</a>
         <% } %>
 
-        <form action="/admin/auth/logout" method="POST" class="m-0 ml-2 js-submit-form">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button
-            type="submit"
-            class="js-submit-button btn btn-primary px-4 py-2 text-sm"
-            data-loading-text="Keluar…"
-          >
-            Keluar
-          </button>
-        </form>
+        <% if (_csrfToken) { %>
+          <form action="/admin/auth/logout" method="POST" class="m-0 ml-2 js-submit-form">
+            <input type="hidden" name="_csrf" value="<%= _csrfToken %>">
+            <button
+              type="submit"
+              class="js-submit-button btn btn-primary px-4 py-2 text-sm"
+              data-loading-text="Keluar…"
+            >
+              Keluar
+            </button>
+          </form>
+        <% } else { %>
+          <a href="/admin/auth/login" class="btn btn-primary px-4 py-2 text-sm">Masuk ulang</a>
+        <% } %>
       </div>
 
       <button
@@ -70,16 +75,20 @@
           <a href="/admin/users" class="<%= navClass(navUsers) %> px-4 py-3">Kelola staf</a>
         <% } %>
 
-        <form action="/admin/auth/logout" method="POST" class="m-0 js-submit-form">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button
-            type="submit"
-            class="js-submit-button btn btn-primary mt-1 w-full px-4 py-3 text-sm"
-            data-loading-text="Keluar…"
-          >
-            Keluar
-          </button>
-        </form>
+        <% if (_csrfToken) { %>
+          <form action="/admin/auth/logout" method="POST" class="m-0 js-submit-form">
+            <input type="hidden" name="_csrf" value="<%= _csrfToken %>">
+            <button
+              type="submit"
+              class="js-submit-button btn btn-primary mt-1 w-full px-4 py-3 text-sm"
+              data-loading-text="Keluar…"
+            >
+              Keluar
+            </button>
+          </form>
+        <% } else { %>
+          <a href="/admin/auth/login" class="btn btn-primary mt-1 w-full px-4 py-3 text-sm">Masuk ulang</a>
+        <% } %>
       </div>
     </div>
   <% } %>
