@@ -94,6 +94,32 @@ function parseVisitedAtInput(body) {
   return d.toISOString().slice(0, 10);
 }
 
+function getPatientSaveErrorMessage(error, fallbackMessage) {
+  if (patientModel.isMissingPatientVisitsTableError(error)) {
+    return 'Tabel kunjungan (patient_visits) belum ada di database. Jalankan migrasi sekali: npm run migrate:patient-visits (atau eksekusi manual berkas utils/migrations/add_patient_visits.sql), lalu coba lagi.';
+  }
+
+  const code = String(error && error.code ? error.code : '');
+  const sqlMsg = String(error && error.sqlMessage ? error.sqlMessage : '').toLowerCase();
+  const msg = String(error && error.message ? error.message : '').toLowerCase();
+  const detail = `${sqlMsg} ${msg}`;
+
+  if (code === 'ER_BAD_FIELD_ERROR' || detail.includes('unknown column')) {
+    if (
+      detail.includes('medications_json') ||
+      detail.includes('ecg_results') ||
+      detail.includes('echo_results') ||
+      detail.includes('lab_results') ||
+      detail.includes('appointments_json') ||
+      detail.includes('clinical_notes')
+    ) {
+      return 'Kolom klinis terbaru belum ada di database. Jalankan migrasi: npm run migrate:patient-clinical, lalu coba lagi.';
+    }
+  }
+
+  return fallbackMessage;
+}
+
 function sanitizeTextarea(value, maxLength = 5000) {
   if (typeof value !== 'string') {
     return '';
@@ -580,7 +606,7 @@ async function updatePatient(req, res) {
   } catch (error) {
     console.error('updatePatient error:', error);
     await unlinkAbsolute(fileOps.rollbackAbs);
-    req.flash('error_msg', 'Gagal memperbarui data pasien.');
+    req.flash('error_msg', getPatientSaveErrorMessage(error, 'Gagal memperbarui data pasien.'));
     return res.redirect(`/admin/patients/${req.params.id}/edit`);
   }
 }
@@ -766,7 +792,7 @@ async function storeNewPatient(req, res) {
     console.error('storeNewPatient error:', error);
     await unlinkAbsolute(fileOps.rollbackAbs);
     req.session.oldForm = req.body;
-    req.flash('error_msg', 'Gagal menyimpan data pasien.');
+    req.flash('error_msg', getPatientSaveErrorMessage(error, 'Gagal menyimpan data pasien.'));
     return res.redirect(newPatientFormUrl(req.body && req.body.form_type));
   }
 }

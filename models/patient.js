@@ -4,6 +4,16 @@ function dbx(conn) {
   return conn || pool;
 }
 
+function asSqlJson(value) {
+  if (value == null || value === '') return null;
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value);
+  } catch (e) {
+    return null;
+  }
+}
+
 /**
  * Prepared statements (pool.execute) often fail on LIMIT/OFFSET placeholders
  * with ER_WRONG_ARGUMENTS on some MySQL/MariaDB builds. Use validated integers instead.
@@ -111,11 +121,11 @@ async function createPatient(data) {
     data.has_previous_mi || 0,
     data.has_atrial_fibrillation || 0,
     data.medications || null,
-    data.medications_json || null,
-    data.ecg_results || null,
-    data.echo_results || null,
-    data.lab_results || null,
-    data.appointments_json || null,
+    asSqlJson(data.medications_json),
+    asSqlJson(data.ecg_results),
+    asSqlJson(data.echo_results),
+    asSqlJson(data.lab_results),
+    asSqlJson(data.appointments_json),
     data.clinical_notes || null,
     data.created_from_ip || null
   ];
@@ -259,11 +269,11 @@ async function syncPatientClinicalFromVisit(patientId, visitRow, conn) {
     visitRow.has_previous_mi || 0,
     visitRow.has_atrial_fibrillation || 0,
     visitRow.medications,
-    visitRow.medications_json,
-    visitRow.ecg_results,
-    visitRow.echo_results,
-    visitRow.lab_results,
-    visitRow.appointments_json,
+    asSqlJson(visitRow.medications_json),
+    asSqlJson(visitRow.ecg_results),
+    asSqlJson(visitRow.echo_results),
+    asSqlJson(visitRow.lab_results),
+    asSqlJson(visitRow.appointments_json),
     visitRow.clinical_notes,
     patientId
   ];
@@ -325,11 +335,11 @@ async function updatePatient(id, data) {
     data.has_previous_mi || 0,
     data.has_atrial_fibrillation || 0,
     data.medications || null,
-    data.medications_json || null,
-    data.ecg_results || null,
-    data.echo_results || null,
-    data.lab_results || null,
-    data.appointments_json || null,
+    asSqlJson(data.medications_json),
+    asSqlJson(data.ecg_results),
+    asSqlJson(data.echo_results),
+    asSqlJson(data.lab_results),
+    asSqlJson(data.appointments_json),
     data.clinical_notes || null,
     id
   ];

@@ -4,6 +4,16 @@ function q(conn) {
   return conn || pool;
 }
 
+function asSqlJson(value) {
+  if (value == null || value === '') return null;
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value);
+  } catch (e) {
+    return null;
+  }
+}
+
 async function listVisitsByPatientId(patientId, conn) {
   const pid = parseInt(String(patientId), 10);
   if (!Number.isFinite(pid) || pid < 1) return [];
@@ -125,11 +135,11 @@ async function insertVisit(
     has_previous_mi || 0,
     has_atrial_fibrillation || 0,
     medications,
-    medications_json,
-    ecg_results,
-    echo_results,
-    lab_results,
-    appointments_json,
+    asSqlJson(medications_json),
+    asSqlJson(ecg_results),
+    asSqlJson(echo_results),
+    asSqlJson(lab_results),
+    asSqlJson(appointments_json),
     clinical_notes
   ];
   const [result] = await q(conn).execute(sql, params);
@@ -187,11 +197,11 @@ async function updateVisit(visitId, data, conn) {
     data.has_previous_mi || 0,
     data.has_atrial_fibrillation || 0,
     data.medications,
-    data.medications_json,
-    data.ecg_results,
-    data.echo_results,
-    data.lab_results,
-    data.appointments_json,
+    asSqlJson(data.medications_json),
+    asSqlJson(data.ecg_results),
+    asSqlJson(data.echo_results),
+    asSqlJson(data.lab_results),
+    asSqlJson(data.appointments_json),
     data.clinical_notes,
     vid
   ];
