@@ -9,6 +9,7 @@ const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
 router.get('/', requireAdmin, (req, res) => res.redirect('/admin/dashboard'));
 
 router.get('/dashboard', requireAdmin, adminController.dashboard);
+router.get('/visit-queue', requireAdmin, adminController.visitQueueToday);
 
 router.get('/users', requireSuperAdmin, staffUsersController.index);
 router.get('/users/new', requireSuperAdmin, staffUsersController.newForm);

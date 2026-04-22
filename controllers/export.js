@@ -10,6 +10,7 @@ const {
   resolvePublicFileUrl
 } = require('../utils/clinicalForm');
 const { parsePatientListDateRange } = require('../utils/dashboardRange');
+const { formatDateId, formatDateTimeId, formatVisitDateId } = require('../utils/dateDisplay');
 
 function drawSectionTitle(doc, title) {
   doc.fontSize(11).fillColor('#0f172a').font('Helvetica-Bold').text(title);
@@ -29,13 +30,6 @@ function drawField(doc, label, value) {
 
 function drawBlock(doc, value) {
   doc.fontSize(9.5).fillColor('#1e293b').font('Helvetica').text(value || '—', { lineGap: 3 });
-}
-
-function formatDate(value) {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  return date.toISOString().slice(0, 10);
 }
 
 function riskYaTidak(value) {
@@ -72,6 +66,15 @@ function formatMedicationsStructured(val) {
     .join(' | ');
 }
 
+function formatAppointmentDatetimeDisplay(raw) {
+  if (raw == null || raw === '') return '';
+  const d = new Date(raw);
+  if (!Number.isNaN(d.getTime())) {
+    return formatDateTimeId(d);
+  }
+  return String(raw).trim();
+}
+
 function formatAppointmentsField(val) {
   const p = safeParseJson(val);
   if (!Array.isArray(p) || !p.length) {
@@ -80,7 +83,8 @@ function formatAppointmentsField(val) {
   return p
     .map((a) => {
       if (!a || typeof a !== 'object') return '';
-      return [a.datetime, a.note].filter(Boolean).join(' — ');
+      const dt = a.datetime ? formatAppointmentDatetimeDisplay(a.datetime) : '';
+      return [dt, a.note].filter(Boolean).join(' — ');
     })
     .filter(Boolean)
     .join(' || ');
@@ -89,12 +93,12 @@ function formatAppointmentsField(val) {
 function getExcelColumns() {
   return [
     { header: 'Kunjungan ke', key: 'visit_number', width: 12 },
-    { header: 'Tgl kunjungan', key: 'visited_at', width: 14 },
+    { header: 'Tgl kunjungan', key: 'visited_at', width: 26 },
     { header: 'Kode pasien', key: 'patient_code', width: 16 },
     { header: 'Jenis form', key: 'form_type', width: 14 },
     { header: 'Nama depan', key: 'first_name', width: 16 },
     { header: 'Nama belakang', key: 'last_name', width: 16 },
-    { header: 'Tanggal lahir', key: 'date_of_birth', width: 12 },
+    { header: 'Tanggal lahir', key: 'date_of_birth', width: 18 },
     { header: 'Jenis kelamin', key: 'gender', width: 12 },
     { header: 'Telepon', key: 'phone', width: 16 },
     { header: 'Email', key: 'email', width: 22 },
@@ -118,7 +122,7 @@ function getExcelColumns() {
     { header: 'Lab', key: 'lab_export', width: 36 },
     { header: 'Janji kontrol', key: 'appointments_export', width: 32 },
     { header: 'Catatan klinis', key: 'clinical_notes', width: 36 },
-    { header: 'Dibuat', key: 'created_at', width: 18 }
+    { header: 'Dibuat', key: 'created_at', width: 28 }
   ];
 }
 
@@ -141,12 +145,12 @@ function mapRowForExcel(item, baseUrl) {
   );
   return {
     visit_number: item.visit_number != null && item.visit_number !== '' ? item.visit_number : '—',
-    visited_at: item.visited_at ? formatDate(item.visited_at) : formatDate(item.created_at),
+    visited_at: item.visited_at ? formatVisitDateId(item.visited_at) : formatDateTimeId(item.created_at),
     patient_code: item.patient_code,
     form_type: item.form_type,
     first_name: item.first_name,
     last_name: item.last_name,
-    date_of_birth: formatDate(item.date_of_birth),
+    date_of_birth: formatDateId(item.date_of_birth),
     gender: item.gender,
     phone: item.phone,
     email: item.email,
@@ -170,7 +174,7 @@ function mapRowForExcel(item, baseUrl) {
     lab_export: excelCellForExam(item.lab_results, baseUrl, 'Hasil Laboratorium'),
     appointments_export: formatAppointmentsField(item.appointments_json),
     clinical_notes: item.clinical_notes || '',
-    created_at: formatDate(item.created_at)
+    created_at: formatDateTimeId(item.created_at)
   };
 }
 
@@ -216,7 +220,7 @@ function renderPdfPatientPage(doc, item, baseUrl, visitMeta) {
     .fontSize(9)
     .fillColor('#64748b')
     .font('Helvetica')
-    .text(`Dicetak: ${formatDate(new Date())}`, { align: 'center' });
+    .text(`Dicetak: ${formatDateTimeId(new Date())}`, { align: 'center' });
   doc.moveDown(1.2);
 
   doc.fontSize(15).fillColor('#0f172a').font('Helvetica-Bold').text(`${item.first_name} ${item.last_name}`);
@@ -227,14 +231,14 @@ function renderPdfPatientPage(doc, item, baseUrl, visitMeta) {
       .fillColor('#0f766e')
       .font('Helvetica-Bold')
       .text(
-        `Kunjungan ke-${visitMeta.visit_number} · ${formatDate(visitMeta.visited_at)}`,
+        `Kunjungan ke-${visitMeta.visit_number} · ${formatVisitDateId(visitMeta.visited_at)}`,
         { align: 'left' }
       );
     doc.moveDown(0.35);
   }
   doc.fontSize(10).fillColor('#475569').font('Helvetica');
   doc.text(`Kode: ${item.patient_code}  ·  Form: ${item.form_type}`);
-  doc.text(`Tanggal lahir: ${formatDate(item.date_of_birth)}  ·  Kelamin: ${item.gender || '—'}`);
+  doc.text(`Tanggal lahir: ${formatDateId(item.date_of_birth)}  ·  Kelamin: ${item.gender || '—'}`);
   doc.moveDown(0.9);
 
   drawSectionTitle(doc, 'Kontak');

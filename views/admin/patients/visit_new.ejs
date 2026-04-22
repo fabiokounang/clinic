@@ -33,13 +33,41 @@
       <div class="animate-fadeUp">
         <%- include('../../partials/flash') %>
 
-        <div class="mb-6 flex flex-wrap items-center gap-2">
-          <span class="rounded-full bg-brand-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-brand-800">
-            <%= patient.form_type %>
-          </span>
-          <span class="rounded-full bg-ink-100 px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.08em] text-ink-600">
-            <%= patient.patient_code %>
-          </span>
+        <% if (typeof duplicateLoadMessage !== 'undefined' && duplicateLoadMessage) { %>
+          <div class="mb-4 rounded-2xl border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-sm text-amber-950 shadow-sm" role="status">
+            <%= duplicateLoadMessage %>
+            <a href="/admin/patients/<%= patient.id %>/visits/new" class="ml-2 font-bold text-brand-800 underline decoration-brand-300 underline-offset-2">Buka form kosong</a>
+          </div>
+        <% } %>
+        <% if (typeof duplicatedFromVisitNumber !== 'undefined' && duplicatedFromVisitNumber != null) { %>
+          <div class="mb-4 rounded-2xl border border-brand-200/90 bg-brand-50/80 px-4 py-3 text-sm text-brand-950 shadow-sm" role="status">
+            <span class="font-semibold">Data diisi dari kunjungan ke-<%= duplicatedFromVisitNumber %>.</span>
+            <span class="text-ink-600"> Periksa dan sesuaikan sebelum menyimpan.</span>
+            <a href="/admin/patients/<%= patient.id %>/visits/new" class="ml-2 font-bold text-brand-800 underline decoration-brand-300 underline-offset-2">Kosongkan form</a>
+          </div>
+        <% } %>
+
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-brand-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-brand-800">
+              <%= patient.form_type %>
+            </span>
+            <span class="rounded-full bg-ink-100 px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.08em] text-ink-600">
+              <%= patient.patient_code %>
+            </span>
+          </div>
+          <% if (
+            isCardio &&
+            typeof hasPreviousVisits !== 'undefined' && hasPreviousVisits &&
+            (typeof duplicatedFromVisitNumber === 'undefined' || duplicatedFromVisitNumber == null)
+          ) { %>
+            <a
+              href="/admin/patients/<%= patient.id %>/visits/new?duplicate=1"
+              class="text-xs font-bold text-brand-800 underline decoration-brand-300 underline-offset-2 sm:text-sm"
+            >
+              Salin dari kunjungan terakhir
+            </a>
+          <% } %>
         </div>
 
         <form action="/admin/patients/<%= patient.id %>/visits" method="POST" enctype="multipart/form-data" class="js-submit-form space-y-8">

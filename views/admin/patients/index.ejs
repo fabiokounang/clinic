@@ -34,56 +34,55 @@
               <input type="hidden" name="limit" value="<%= limit %>">
               <input type="hidden" name="page" value="1">
 
-              <% const ptControl = 'field-input !min-h-0 h-11 py-2 text-sm'; const ptSelect = 'field-select !min-h-0 h-11 py-2 text-sm'; %>
-              <div class="flex flex-col gap-4">
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
-                  <div class="min-w-0 sm:col-span-2 lg:col-span-1">
-                    <label class="field-label" for="pt-search">Cari</label>
-                    <input
-                      id="pt-search"
-                      type="text"
-                      name="search"
-                      class="<%= ptControl %> w-full min-w-0"
-                      placeholder="Nama, kode pasien, telepon…"
-                      value="<%= search || '' %>"
-                      autocomplete="off"
-                    >
-                  </div>
+              <% const ptLbl = 'field-label !mb-1 !text-[0.65rem]'; const ptControl = 'field-input !min-h-0 h-9 py-1.5 text-sm rounded-xl'; const ptSelect = 'field-select !min-h-0 h-9 py-1.5 text-sm rounded-xl !pr-9'; %>
+              <div class="flex flex-col gap-3 lg:flex-row lg:flex-nowrap lg:items-end lg:gap-2">
+                <div class="min-w-0 flex-1 lg:min-w-[12rem]">
+                  <label class="<%= ptLbl %>" for="pt-search">Cari</label>
+                  <input
+                    id="pt-search"
+                    type="text"
+                    name="search"
+                    class="<%= ptControl %> w-full min-w-0"
+                    placeholder="Nama, kode pasien, telepon…"
+                    value="<%= search || '' %>"
+                    autocomplete="off"
+                  >
+                </div>
 
-                  <div class="min-w-0 sm:col-span-2 lg:col-span-1">
-                    <label class="field-label" for="pt-form">Jenis form</label>
-                    <select id="pt-form" name="form_type" class="<%= ptSelect %> w-full min-w-0">
-                      <option value="">Semua</option>
-                      <% (formTypes || []).forEach(item => { %>
-                        <option value="<%= item.slug %>" <%= formType === item.slug ? 'selected' : '' %>>
-                          <%= item.name %>
-                        </option>
-                      <% }) %>
-                    </select>
-                  </div>
+                <div class="min-w-0 w-full shrink-0 sm:max-w-[11rem] lg:w-40 lg:max-w-none">
+                  <label class="<%= ptLbl %>" for="pt-form">Jenis form</label>
+                  <select id="pt-form" name="form_type" class="<%= ptSelect %> w-full min-w-0">
+                    <option value="">Semua</option>
+                    <% (formTypes || []).forEach(item => { %>
+                      <option value="<%= item.slug %>" <%= formType === item.slug ? 'selected' : '' %>>
+                        <%= item.name %>
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
 
-                  <div class="min-w-0 sm:col-span-1">
-                    <label class="field-label" for="pt-from">Dari</label>
+                <div class="grid min-w-0 grid-cols-2 gap-2 sm:max-w-md lg:max-w-none lg:grid-cols-2 lg:gap-2 lg:w-[17.5rem] lg:shrink-0">
+                  <div class="min-w-0">
+                    <label class="<%= ptLbl %>" for="pt-from">Dari</label>
                     <input id="pt-from" type="date" name="from" class="<%= ptControl %> w-full min-w-0" value="<%= dateFrom || '' %>" title="Tanggal terdaftar (mulai)">
                   </div>
-
-                  <div class="min-w-0 sm:col-span-1">
-                    <label class="field-label" for="pt-to">Sampai</label>
+                  <div class="min-w-0">
+                    <label class="<%= ptLbl %>" for="pt-to">Sampai</label>
                     <input id="pt-to" type="date" name="to" class="<%= ptControl %> w-full min-w-0" value="<%= dateTo || '' %>" title="Tanggal terdaftar (akhir)">
                   </div>
                 </div>
 
-                <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch sm:justify-end sm:gap-3">
+                <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:justify-end lg:ml-auto lg:flex-row lg:gap-2">
                   <button
                     type="submit"
-                    class="btn btn-primary flex h-11 min-h-0 w-full min-w-[9rem] shrink-0 items-center justify-center whitespace-nowrap rounded-xl px-5 text-sm font-bold shadow-md shadow-brand-900/10 sm:w-auto"
+                    class="btn btn-primary flex h-9 min-h-0 w-full min-w-[7.5rem] shrink-0 items-center justify-center whitespace-nowrap rounded-xl px-4 text-sm font-bold shadow-md shadow-brand-900/10 sm:w-auto"
                   >
                     Terapkan
                   </button>
                   <a
                     href="/admin/patients/export/excel<%= exportPatientsQs ? '?' + exportPatientsQs : '' %>"
                     title="Ekspor Excel sesuai filter saat ini"
-                    class="inline-flex h-11 w-full min-w-[9rem] items-center justify-center rounded-xl border border-ink-200/90 bg-white px-5 text-sm font-bold text-ink-800 shadow-sm transition hover:border-brand-300 hover:bg-brand-50/90 sm:w-auto"
+                    class="inline-flex h-9 w-full min-w-[7.5rem] items-center justify-center rounded-xl border border-ink-200/90 bg-white px-4 text-sm font-bold text-ink-800 shadow-sm transition hover:border-brand-300 hover:bg-brand-50/90 sm:w-auto"
                   >
                     Excel
                   </a>
@@ -100,12 +99,6 @@
           </div>
         <% } else { %>
           <%
-            const fmtIdShort = function (raw) {
-              if (!raw) return '—';
-              const x = new Date(raw);
-              if (Number.isNaN(x.getTime())) return '—';
-              return x.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-            };
             const genderLabel = function (g) {
               if (!g) return '—';
               const m = { male: 'Laki-laki', female: 'Perempuan', other: 'Lainnya' };
@@ -165,14 +158,14 @@
                       <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-[0.7rem] leading-none shadow-inner ring-1 ring-amber-100/80" aria-hidden="true">🎂</span>
                       <div class="min-w-0">
                         <dt class="text-[0.58rem] font-bold uppercase leading-tight tracking-wide text-ink-500">Tanggal lahir</dt>
-                        <dd class="mt-0.5 text-[0.75rem] font-medium leading-snug tabular-nums text-ink-900"><%= fmtIdShort(patient.date_of_birth) %></dd>
+                        <dd class="mt-0.5 text-[0.75rem] font-medium leading-snug text-ink-900"><%= formatDateId(patient.date_of_birth) %></dd>
                       </div>
                     </div>
                     <div class="flex gap-2 rounded-lg bg-white/70 px-2 py-2 shadow-sm ring-1 ring-ink-100/80">
                       <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-[0.7rem] leading-none shadow-inner ring-1 ring-violet-100/80" aria-hidden="true">📅</span>
                       <div class="min-w-0">
                         <dt class="text-[0.58rem] font-bold uppercase leading-tight tracking-wide text-ink-500">Terdaftar</dt>
-                        <dd class="mt-0.5 text-[0.75rem] font-medium leading-snug tabular-nums text-ink-900"><%= fmtIdShort(patient.created_at) %></dd>
+                        <dd class="mt-0.5 text-[0.75rem] font-medium leading-snug text-ink-900"><%= formatDateTimeId(patient.created_at) %></dd>
                       </div>
                     </div>
                   </dl>
@@ -192,10 +185,21 @@
 
           <div class="card-surface glass-card hidden overflow-hidden p-0 xl:block">
             <div class="overflow-x-auto">
-              <table class="min-w-[920px] w-full border-collapse text-left text-sm">
+              <table class="w-full min-w-0 table-fixed border-collapse text-left text-sm text-ink-800">
+                <colgroup>
+                  <col class="w-[9%]" />
+                  <col class="w-[19%]" />
+                  <col class="w-[11%]" />
+                  <col class="w-[6%]" />
+                  <col class="w-[8%]" />
+                  <col class="w-[8%]" />
+                  <col class="w-[13%]" />
+                  <col class="w-[16%]" />
+                  <col class="w-[10%]" />
+                </colgroup>
                 <thead>
-                  <tr class="border-b border-ink-200/80 bg-brand-50/90 text-xs font-bold uppercase tracking-[0.08em] text-ink-600">
-                    <th scope="col" class="px-4 py-2.5 sm:px-5">
+                  <tr class="border-b border-ink-200/80 bg-brand-50/90 text-xs font-bold uppercase tracking-wide text-ink-600">
+                    <th scope="col" class="px-3 py-2.5 sm:px-4">
                       <a href="<%= sortColumnHref('patient_code') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
                         Kode
                         <% if (sort === 'patient_code') { %>
@@ -203,7 +207,7 @@
                         <% } %>
                       </a>
                     </th>
-                    <th scope="col" class="px-4 py-2.5 sm:px-5">
+                    <th scope="col" class="px-3 py-2.5 sm:px-4">
                       <a href="<%= sortColumnHref('name') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
                         Nama
                         <% if (sort === 'name') { %>
@@ -211,7 +215,7 @@
                         <% } %>
                       </a>
                     </th>
-                    <th scope="col" class="px-4 py-2.5 sm:px-5">
+                    <th scope="col" class="px-3 py-2.5 sm:px-4">
                       <a href="<%= sortColumnHref('form_type') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
                         Jenis form
                         <% if (sort === 'form_type') { %>
@@ -219,8 +223,8 @@
                         <% } %>
                       </a>
                     </th>
-                    <th scope="col" class="whitespace-nowrap px-4 py-2.5 text-left sm:px-5">Kunjungan</th>
-                    <th scope="col" class="px-4 py-2.5 sm:px-5">
+                    <th scope="col" class="whitespace-nowrap px-3 py-2.5 text-left sm:px-4">Kunjungan</th>
+                    <th scope="col" class="px-3 py-2.5 sm:px-4">
                       <a href="<%= sortColumnHref('phone') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
                         Telepon
                         <% if (sort === 'phone') { %>
@@ -228,7 +232,7 @@
                         <% } %>
                       </a>
                     </th>
-                    <th scope="col" class="px-4 py-2.5 sm:px-5">
+                    <th scope="col" class="px-3 py-2.5 sm:px-4">
                       <a href="<%= sortColumnHref('gender') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
                         Gender
                         <% if (sort === 'gender') { %>
@@ -236,7 +240,7 @@
                         <% } %>
                       </a>
                     </th>
-                    <th scope="col" class="px-4 py-2.5 sm:px-5 whitespace-nowrap">
+                    <th scope="col" class="whitespace-nowrap px-3 py-2.5 sm:px-4">
                       <a href="<%= sortColumnHref('date_of_birth') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
                         DOB
                         <% if (sort === 'date_of_birth') { %>
@@ -244,7 +248,7 @@
                         <% } %>
                       </a>
                     </th>
-                    <th scope="col" class="whitespace-nowrap px-4 py-2.5 sm:px-5">
+                    <th scope="col" class="whitespace-nowrap px-3 py-2.5 sm:px-4">
                       <a href="<%= sortColumnHref('created_at') %>" class="inline-flex items-center gap-1 rounded-lg text-ink-700 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
                         Terdaftar
                         <% if (sort === 'created_at') { %>
@@ -261,33 +265,35 @@
                       class="transition-colors hover:bg-brand-50/50 animate-fadeUp"
                       style="animation-delay: <%= Math.min(index * 28, 400) %>ms;"
                     >
-                      <td class="px-4 py-2.5 align-middle sm:px-5">
+                      <td class="px-3 py-2.5 align-middle sm:px-4">
                         <span class="inline-flex max-w-full truncate rounded-full bg-ink-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-ink-700">
                           <%= patient.patient_code %>
                         </span>
                       </td>
-                      <td class="max-w-[11rem] px-4 py-2.5 align-middle font-bold text-ink-900 sm:max-w-[16rem] sm:px-5">
+                      <td class="max-w-0 min-w-0 px-3 py-2.5 align-middle font-bold text-ink-900 sm:px-4">
                         <span class="block truncate" title="<%= patient.first_name %> <%= patient.last_name %>">
                           <%= patient.first_name %> <%= patient.last_name %>
                         </span>
                       </td>
-                      <td class="px-4 py-2.5 align-middle sm:px-5">
+                      <td class="min-w-0 px-3 py-2.5 align-middle sm:px-4">
                         <span class="inline-flex max-w-full truncate rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-brand-800">
                           <%= patient.form_type %>
                         </span>
                       </td>
-                      <td class="px-4 py-2.5 align-middle tabular-nums text-ink-800 sm:px-5 whitespace-nowrap">
+                      <td class="px-3 py-2.5 align-middle tabular-nums text-ink-800 sm:px-4 whitespace-nowrap">
                         <%= patient.visit_count != null ? patient.visit_count : '—' %>
                       </td>
-                      <td class="px-4 py-2.5 align-middle tabular-nums text-ink-700 sm:px-5 whitespace-nowrap"><%= patient.phone || '—' %></td>
-                      <td class="px-4 py-2.5 align-middle capitalize text-ink-700 sm:px-5 whitespace-nowrap"><%= patient.gender || '—' %></td>
-                      <td class="px-4 py-2.5 align-middle tabular-nums text-ink-700 sm:px-5 whitespace-nowrap">
-                        <%= patient.date_of_birth ? new Date(patient.date_of_birth).toISOString().slice(0, 10) : '—' %>
+                      <td class="max-w-0 min-w-0 px-3 py-2.5 align-middle sm:px-4">
+                        <span class="block max-w-full truncate tabular-nums text-ink-700" title="<%= patient.phone || '' %>"><%= patient.phone || '—' %></span>
                       </td>
-                      <td class="px-4 py-2.5 align-middle tabular-nums text-ink-600 sm:px-5 whitespace-nowrap">
-                        <%= patient.created_at ? new Date(patient.created_at).toISOString().slice(0, 10) : '—' %>
+                      <td class="px-3 py-2.5 align-middle capitalize text-ink-700 sm:px-4 whitespace-nowrap"><%= patient.gender || '—' %></td>
+                      <td class="px-3 py-2.5 align-middle text-ink-700 sm:px-4 whitespace-nowrap">
+                        <%= formatDateId(patient.date_of_birth) %>
                       </td>
-                      <td class="border-l border-ink-100/90 bg-white/80 px-2 py-2 align-middle sm:px-3">
+                      <td class="min-w-0 px-3 py-2.5 align-middle text-ink-600 sm:px-4 whitespace-nowrap">
+                        <%= formatDateTimeId(patient.created_at) %>
+                      </td>
+                      <td class="border-l border-ink-100/90 bg-white/80 px-2 py-2.5 align-middle sm:px-3">
                         <div class="flex flex-nowrap items-center justify-end gap-1.5">
                           <a
                             href="/admin/patients/<%= patient.id %>"

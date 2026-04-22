@@ -16,6 +16,8 @@
 
   const navDash = !!admin && ap === '/admin/dashboard';
 
+  const navQueue = !!admin && (ap === '/admin/visit-queue' || ap.indexOf('/admin/visit-queue') === 0);
+
   const navNew = !!admin && (ap === '/admin/patients/new' || ap.indexOf('/admin/patients/new') === 0);
 
   const navPatients = !!admin && ap.indexOf('/admin/patients') === 0 && !navNew;
@@ -105,6 +107,14 @@
         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/80 text-base shadow-sm ring-1 ring-slate-200/80" aria-hidden="true">📊</span>
 
         <span>Dashboard</span>
+
+      </a>
+
+      <a href="/admin/visit-queue" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition <%= navSideClass(navQueue) %>">
+
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/80 text-base shadow-sm ring-1 ring-slate-200/80" aria-hidden="true">📅</span>
+
+        <span>Antrian hari ini</span>
 
       </a>
 

@@ -13,9 +13,16 @@ const {
 } = require('../utils/dashboardRange');
 const formTypeModel = require('../models/form_type');
 const { getClientIp } = require('../utils/request');
-const { parseClinicalFromBody, buildClinicalPrefill } = require('../utils/clinicalForm');
+const { parseClinicalFromBody, buildClinicalPrefill, clinicalFieldsFromVisitRow } = require('../utils/clinicalForm');
 const { unlinkAbsolute, unlinkPublicRelative } = require('../utils/uploadCleanup');
 const adminNavHelpers = require('../utils/adminNav');
+const {
+  ymdInTimeZone,
+  parseYmdParam,
+  buildVisitQueueItems,
+  shiftYmd
+} = require('../utils/appointmentQueue');
+const { formatDateId } = require('../utils/dateDisplay');
 
 const PATIENT_LIST_LIMITS = [10, 25, 50, 100];
 const PATIENT_LIST_SORT_KEYS = new Set([
@@ -813,7 +820,18 @@ async function newVisitForm(req, res) {
       req.flash('error_msg', 'Formulir kunjungan lanjutan saat ini hanya untuk jenis form kardiologi.');
       return res.redirect(`/admin/patients/${id}`);
     }
-    const formPatient = Object.assign({}, patient, {
+    const dupQ = String(req.query.duplicate || '').toLowerCase();
+    const duplicateRequested = dupQ === '1' || dupQ === 'true' || dupQ === 'yes';
+
+    let visits = [];
+    try {
+      visits = await patientVisitModel.listVisitsByPatientId(id);
+    } catch (e) {
+      visits = [];
+    }
+    const hasPreviousVisits = visits.length > 0;
+
+    const emptyClinical = {
       primary_diagnosis: null,
       secondary_diagnoses: null,
       cardiac_history: null,
@@ -833,14 +851,32 @@ async function newVisitForm(req, res) {
       lab_results: null,
       appointments_json: null,
       clinical_notes: null
-    });
+    };
+
+    let formPatient = Object.assign({}, patient, emptyClinical);
+    let duplicatedFromVisitNumber = null;
+    let duplicateLoadMessage = null;
+
+    if (duplicateRequested) {
+      if (visits.length) {
+        const lastVisit = visits[visits.length - 1];
+        duplicatedFromVisitNumber = lastVisit.visit_number;
+        Object.assign(formPatient, clinicalFieldsFromVisitRow(lastVisit));
+      } else {
+        duplicateLoadMessage = 'Belum ada kunjungan sebelumnya yang bisa diduplikasi.';
+      }
+    }
+
     const clinicalPrefill = buildClinicalPrefill(formPatient);
     return res.render('admin/patients/visit_new', {
       title: 'Kunjungan baru',
       adminNav: adminNavHelpers.visitNew(patient),
       patient,
       formPatient,
-      clinicalPrefill
+      clinicalPrefill,
+      duplicatedFromVisitNumber,
+      duplicateLoadMessage,
+      hasPreviousVisits
     });
   } catch (error) {
     console.error('newVisitForm error:', error);
@@ -1017,6 +1053,43 @@ async function deleteVisit(req, res) {
   }
 }
 
+async function visitQueueToday(req, res) {
+  const tz = process.env.CLINIC_TIMEZONE || 'Asia/Jakarta';
+  const todayYmd = ymdInTimeZone(new Date(), tz);
+  const rawDate = parseYmdParam(req.query.date);
+  const queueDate = rawDate || todayYmd;
+
+  let queueItems = [];
+  try {
+    const rows = await patientVisitModel.fetchAppointmentQueueSources();
+    queueItems = buildVisitQueueItems(rows, queueDate);
+  } catch (error) {
+    console.error('visitQueueToday error:', error);
+    req.flash(
+      'error_msg',
+      'Gagal memuat daftar janji. Pastikan migrasi tabel kunjungan sudah dijalankan (npm run migrate:patient-visits).'
+    );
+  }
+
+  const queueDateLabel = formatDateId(queueDate);
+
+  const prevDate = shiftYmd(queueDate, -1);
+  const nextDate = shiftYmd(queueDate, 1);
+
+  return res.render('admin/visit_queue_today', {
+    title: 'Antrian hari ini',
+    adminNav: adminNavHelpers.visitQueueToday(),
+    queueDate,
+    queueDateLabel,
+    todayYmd,
+    clinicTimezone: tz,
+    queueItems,
+    prevDate,
+    nextDate,
+    isToday: queueDate === todayYmd
+  });
+}
+
 async function deletePatient(req, res) {
   try {
     const id = Number(req.params.id);
@@ -1057,6 +1130,7 @@ async function deletePatient(req, res) {
 
 module.exports = {
   dashboard,
+  visitQueueToday,
   indexPatients,
   showPatient,
   newPatientForm,

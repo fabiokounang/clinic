@@ -34,8 +34,6 @@
         <% 
           const initials = (((patient.first_name || '?').trim().charAt(0)) + ((patient.last_name || '').trim().charAt(0))).toUpperCase() || '?';
           const genderLabel = patient.gender === 'male' ? 'Laki-laki' : patient.gender === 'female' ? 'Perempuan' : patient.gender === 'other' ? 'Lainnya' : '—';
-          const dobStr = patient.date_of_birth ? new Date(patient.date_of_birth).toISOString().slice(0, 10) : '—';
-          const createdStr = patient.created_at ? new Date(patient.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
           function jparse(s) {
             if (s == null || s === '') return null;
             if (typeof s === 'object') return s;
@@ -62,7 +60,9 @@
           const apptJ = jparse(patient.appointments_json);
         %>
 
-        <%- include('../../partials/flash') %>
+        <div class="mt-3 sm:mt-4">
+          <%- include('../../partials/flash') %>
+        </div>
 
         <section class="relative overflow-hidden rounded-2xl border border-brand-200/40 bg-gradient-to-br from-brand-50/90 via-white to-sky-50/25 p-4 shadow-soft sm:p-5">
           <div class="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-brand-200/20 blur-3xl"></div>
@@ -86,11 +86,11 @@
                   <%= patient.first_name %> <%= patient.last_name %>
                 </h1>
                 <p class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ink-600">
-                  <span><span class="font-semibold text-ink-700">DOB:</span> <%= dobStr %></span>
+                  <span><span class="font-semibold text-ink-700">DOB:</span> <%= formatDateId(patient.date_of_birth) %></span>
                   <span class="hidden sm:inline text-ink-300">·</span>
                   <span><span class="font-semibold text-ink-700">Kelamin:</span> <%= genderLabel %></span>
                 </p>
-                <p class="mt-1 text-[0.7rem] text-ink-500">Terdaftar: <%= createdStr %></p>
+                <p class="mt-1 text-[0.7rem] text-ink-500">Terdaftar: <%= formatDateTimeId(patient.created_at) %></p>
                 <% if (typeof visits !== 'undefined' && visits && visits.length) { %>
                   <p class="mt-0.5 text-[0.7rem] font-semibold text-brand-800"><%= visits.length %> kunjungan</p>
                 <% } %>
@@ -122,6 +122,15 @@
                 >
                   + Kunjungan baru
                 </a>
+                <% if (typeof visits !== 'undefined' && visits && visits.length) { %>
+                  <a
+                    href="/admin/patients/<%= patient.id %>/visits/new?duplicate=1"
+                    class="inline-flex min-h-0 w-full items-center justify-center rounded-lg border border-brand-200/90 bg-brand-50/60 px-2 py-1.5 text-[0.7rem] font-bold text-brand-900 shadow-sm transition hover:bg-brand-100/80"
+                    title="Salin diagnosis, obat, hasil pemeriksaan, dan catatan dari kunjungan terakhir"
+                  >
+                    Duplikat dari terakhir
+                  </a>
+                <% } %>
               <% } %>
               <form
                 action="/admin/patients/<%= patient.id %>/delete"
@@ -298,7 +307,7 @@
                   <ul class="space-y-3">
                     <% apptJ.forEach(function (a) { %>
                       <li class="rounded-2xl border border-amber-100/80 bg-amber-50/30 px-4 py-3 text-sm text-ink-800">
-                        <p class="font-semibold text-ink-900"><%= a && a.datetime ? a.datetime : '—' %></p>
+                        <p class="font-semibold text-ink-900"><%= a && a.datetime ? formatVisitDateId(a.datetime) : '—' %></p>
                         <% if (a && a.note) { %>
                           <p class="mt-1 text-ink-700"><%= a.note %></p>
                         <% } %>

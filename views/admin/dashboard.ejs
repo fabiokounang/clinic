@@ -149,7 +149,7 @@
                       </p>
                     </div>
                     <time class="shrink-0 text-xs text-ink-400" datetime="<%= p.created_at %>">
-                      <%= p.created_at ? new Date(p.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '—' %>
+                      <%= formatDateTimeId(p.created_at) %>
                     </time>
                   </li>
                 <% }); %>
@@ -174,7 +174,7 @@
                     <p class="text-sm text-ink-800 line-clamp-2"><%= log.description || log.action %></p>
                     <p class="mt-1 text-[0.7rem] text-ink-400">
                       <%= log.module %> · <%= log.action %>
-                      · <%= log.created_at ? new Date(log.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '—' %>
+                      · <%= formatDateTimeId(log.created_at) %>
                     </p>
                   </li>
                 <% }); %>

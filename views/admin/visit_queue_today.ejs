@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('../partials/app_head', { title: title }) %>
+</head>
+<body class="page-bg min-h-screen text-ink-900">
+  <%- include('../partials/admin_shell_open', {
+    adminInnerClass: 'relative mx-auto max-w-6xl px-4 pb-8 pt-0 sm:px-6 lg:px-8'
+  }) %>
+
+      <div class="animate-fadeUp">
+        <%- include('../partials/flash') %>
+
+        <p class="mb-5 max-w-2xl text-sm text-ink-600 sm:text-base">
+          Menampilkan <strong class="text-ink-800">janji kontrol</strong> dari isian <em>Janji &amp; kontrol</em> pada pasien (kunjungan terakhir tersinkron ke profil). Ubah tanggal untuk melihat hari lain.
+        </p>
+
+        <section class="card-surface glass-card mb-6 overflow-hidden shadow-[0_12px_40px_rgba(15,23,42,0.07)] ring-1 ring-slate-900/[0.04]">
+          <div class="border-b border-brand-100/90 bg-gradient-to-br from-brand-50/95 via-white to-sky-50/50 px-4 py-3 sm:px-6 sm:py-4">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 class="text-base font-extrabold tracking-tight text-ink-900 sm:text-lg">Pilih tanggal</h2>
+                <p class="mt-1 text-sm text-ink-600"><%= typeof queueDateLabel !== 'undefined' ? queueDateLabel : queueDate %></p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <% if (typeof prevDate === 'string' && prevDate) { %>
+                  <a href="/admin/visit-queue?date=<%= prevDate %>" class="btn btn-secondary px-3 py-2 text-xs sm:text-sm">← Sebelumnya</a>
+                <% } %>
+                <% if (typeof nextDate === 'string' && nextDate) { %>
+                  <a href="/admin/visit-queue?date=<%= nextDate %>" class="btn btn-secondary px-3 py-2 text-xs sm:text-sm">Berikutnya →</a>
+                <% } %>
+                <% if (typeof isToday !== 'undefined' && !isToday && typeof todayYmd === 'string') { %>
+                  <a href="/admin/visit-queue" class="btn btn-primary px-3 py-2 text-xs sm:text-sm">Hari ini</a>
+                <% } %>
+              </div>
+            </div>
+          </div>
+          <div class="p-4 sm:p-5">
+            <form method="GET" action="/admin/visit-queue" class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+              <div class="min-w-0 sm:max-w-xs">
+                <label class="field-label" for="vq-date">Tanggal antrian</label>
+                <input
+                  id="vq-date"
+                  type="date"
+                  name="date"
+                  class="field-input"
+                  value="<%= queueDate %>"
+                  required
+                >
+              </div>
+              <button type="submit" class="btn btn-primary px-5 py-2.5 text-sm whitespace-nowrap">Tampilkan</button>
+            </form>
+            <p class="mt-3 text-xs text-ink-500">
+              Zona waktu referensi “hari ini”: <strong class="text-ink-700"><%= typeof clinicTimezone !== 'undefined' ? clinicTimezone : 'Asia/Jakarta' %></strong>
+              (atur <code class="rounded bg-slate-100 px-1 text-[0.7rem]">CLINIC_TIMEZONE</code> di server jika perlu).
+            </p>
+          </div>
+        </section>
+
+        <section class="card-surface glass-card overflow-hidden ring-1 ring-slate-900/[0.04]">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 sm:px-6">
+            <h2 class="text-sm font-extrabold text-ink-900 sm:text-base">Daftar janji</h2>
+            <span class="rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-900 ring-1 ring-brand-100">
+              <%= (typeof queueItems !== 'undefined' && queueItems) ? queueItems.length : 0 %> janji
+            </span>
+          </div>
+
+          <% const items = (typeof queueItems !== 'undefined' && queueItems) ? queueItems : []; %>
+          <% if (!items.length) { %>
+            <div class="px-4 py-12 text-center sm:px-6">
+              <p class="text-sm text-ink-600">Tidak ada janji pada tanggal ini.</p>
+              <p class="mt-2 text-xs text-ink-500">Pastikan tanggal &amp; waktu diisi di form pasien (datetime) agar muncul di sini.</p>
+            </div>
+          <% } else { %>
+
+          <div class="hidden xl:block">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-slate-100 text-left text-sm">
+                <thead class="bg-slate-50/80 text-xs font-bold uppercase tracking-wider text-ink-500">
+                  <tr>
+                    <th class="whitespace-nowrap px-4 py-3 sm:px-6">Tanggal &amp; waktu</th>
+                    <th class="px-4 py-3 sm:px-6">Pasien</th>
+                    <th class="whitespace-nowrap px-4 py-3 sm:px-6">Kode</th>
+                    <th class="whitespace-nowrap px-4 py-3 sm:px-6">Telepon</th>
+                    <th class="px-4 py-3 sm:px-6">Catatan janji</th>
+                    <th class="whitespace-nowrap px-4 py-3 sm:px-6">Kunjungan</th>
+                    <th class="whitespace-nowrap px-4 py-3 sm:px-6">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  <% items.forEach(function (row) { %>
+                    <tr class="transition hover:bg-brand-50/40">
+                      <td class="whitespace-nowrap px-4 py-3 text-sm text-ink-900 sm:px-6"><%= formatVisitDateId(row.datetimeRaw) %></td>
+                      <td class="px-4 py-3 font-semibold text-ink-900 sm:px-6"><%= row.fullName %></td>
+                      <td class="whitespace-nowrap px-4 py-3 font-mono text-xs text-ink-700 sm:px-6"><%= row.patient_code %></td>
+                      <td class="whitespace-nowrap px-4 py-3 text-xs text-ink-600 sm:px-6"><%= row.phone || '—' %></td>
+                      <td class="max-w-[14rem] px-4 py-3 text-xs text-ink-600 sm:max-w-xs sm:px-6"><%= row.note || '—' %></td>
+                      <td class="whitespace-nowrap px-4 py-3 text-xs text-ink-600 sm:px-6">
+                        <%= row.visit_number != null ? ('ke-' + row.visit_number) : '—' %>
+                      </td>
+                      <td class="whitespace-nowrap px-4 py-3 sm:px-6">
+                        <a href="/admin/patients/<%= row.patient_id %>" class="inline-flex rounded-lg border border-brand-200 bg-white px-3 py-1.5 text-xs font-bold text-brand-900 shadow-sm transition hover:bg-brand-50">Detail</a>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="xl:hidden">
+            <div class="grid gap-3 p-4 sm:grid-cols-2 sm:p-5">
+              <% items.forEach(function (row) { %>
+                <article class="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm ring-1 ring-slate-900/[0.03]">
+                  <div class="flex items-start justify-between gap-2">
+                    <div>
+                      <p class="text-xs font-bold leading-snug text-brand-800"><%= formatVisitDateId(row.datetimeRaw) %></p>
+                      <p class="mt-1 text-sm font-extrabold text-ink-900"><%= row.fullName %></p>
+                      <p class="mt-0.5 font-mono text-[0.65rem] text-ink-500"><%= row.patient_code %></p>
+                    </div>
+                    <a href="/admin/patients/<%= row.patient_id %>" class="shrink-0 rounded-lg border border-brand-200 bg-brand-50/80 px-2.5 py-1.5 text-[0.7rem] font-bold text-brand-900">Detail</a>
+                  </div>
+                  <% if (row.phone) { %>
+                    <p class="mt-2 text-xs text-ink-600"><span class="font-semibold text-ink-700">Telp:</span> <%= row.phone %></p>
+                  <% } %>
+                  <% if (row.note) { %>
+                    <p class="mt-1 text-xs leading-relaxed text-ink-600"><span class="font-semibold text-ink-700">Janji:</span> <%= row.note %></p>
+                  <% } %>
+                  <% if (row.visit_number != null) { %>
+                    <p class="mt-2 text-[0.65rem] text-ink-500">Kunjungan ke-<%= row.visit_number %></p>
+                  <% } %>
+                </article>
+              <% }); %>
+            </div>
+          </div>
+
+          <% } %>
+        </section>
+      </div>
+
+  <%- include('../partials/admin_shell_close') %>
+</body>
+</html>

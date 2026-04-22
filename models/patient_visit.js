@@ -155,6 +155,58 @@ async function deleteVisitForPatient(visitId, patientId, conn) {
   return result.affectedRows > 0;
 }
 
+/**
+ * Sumber data untuk antrian janji: semua kunjungan dengan appointments_json,
+ * plus pasien yang punya janji di profil tapi belum punya baris kunjungan (edge case).
+ */
+async function fetchAppointmentQueueSources(conn) {
+  const q = conn || pool;
+  const sqlVisits = `
+    SELECT
+      pv.id AS visit_id,
+      pv.visit_number,
+      pv.visited_at,
+      pv.appointments_json,
+      p.id AS patient_id,
+      p.patient_code,
+      p.first_name,
+      p.last_name,
+      p.phone,
+      p.form_type
+    FROM patient_visits pv
+    INNER JOIN patients p ON p.id = pv.patient_id AND p.deleted_at IS NULL
+    WHERE pv.appointments_json IS NOT NULL
+  `;
+  const [visitRows] = await q.execute(sqlVisits);
+
+  const sqlOrphans = `
+    SELECT
+      NULL AS visit_id,
+      NULL AS visit_number,
+      p.created_at AS visited_at,
+      p.appointments_json,
+      p.id AS patient_id,
+      p.patient_code,
+      p.first_name,
+      p.last_name,
+      p.phone,
+      p.form_type
+    FROM patients p
+    WHERE p.deleted_at IS NULL
+      AND p.appointments_json IS NOT NULL
+      AND NOT EXISTS (SELECT 1 FROM patient_visits v WHERE v.patient_id = p.id)
+  `;
+  let orphanRows = [];
+  try {
+    const [o] = await q.execute(sqlOrphans);
+    orphanRows = o || [];
+  } catch (e) {
+    orphanRows = [];
+  }
+
+  return [...(visitRows || []), ...orphanRows];
+}
+
 async function updateVisit(visitId, data, conn) {
   const vid = parseInt(String(visitId), 10);
   if (!Number.isFinite(vid) || vid < 1) return false;
@@ -216,5 +268,6 @@ module.exports = {
   getNextVisitNumber,
   insertVisit,
   deleteVisitForPatient,
-  updateVisit
+  updateVisit,
+  fetchAppointmentQueueSources
 };

@@ -222,6 +222,37 @@ function parseClinicalFromBody(body, options = {}) {
   };
 }
 
+/**
+ * Map baris patient_visits → field klinis untuk form (merge ke objek seperti getPatientById).
+ */
+function clinicalFieldsFromVisitRow(row) {
+  if (!row || typeof row !== 'object') {
+    return {};
+  }
+  const bit = (v) => (v ? 1 : 0);
+  return {
+    primary_diagnosis: row.primary_diagnosis,
+    secondary_diagnoses: row.secondary_diagnoses,
+    cardiac_history: row.cardiac_history,
+    has_hypertension: bit(row.has_hypertension),
+    has_diabetes: bit(row.has_diabetes),
+    has_dyslipidemia: bit(row.has_dyslipidemia),
+    has_smoking: bit(row.has_smoking),
+    has_obesity: bit(row.has_obesity),
+    has_family_history: bit(row.has_family_history),
+    has_ckd: bit(row.has_ckd),
+    has_previous_mi: bit(row.has_previous_mi),
+    has_atrial_fibrillation: bit(row.has_atrial_fibrillation),
+    medications: row.medications,
+    medications_json: row.medications_json,
+    ecg_results: row.ecg_results,
+    echo_results: row.echo_results,
+    lab_results: row.lab_results,
+    appointments_json: row.appointments_json,
+    clinical_notes: row.clinical_notes
+  };
+}
+
 function buildClinicalPrefill(patient) {
   const meds = safeParseJson(patient.medications_json);
   const medList = Array.isArray(meds) && meds.length ? meds : [{ name: '', dose: '', frequency: '' }];
@@ -276,6 +307,7 @@ module.exports = {
   jsonOrNull,
   normalizeArrayField,
   safeParseJson,
+  clinicalFieldsFromVisitRow,
   buildClinicalPrefill,
   normalizeExamForForm,
   formatExamForExport,

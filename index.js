@@ -8,6 +8,12 @@ const csrf = require('csurf');
 const helmet = require('helmet');
 
 const { testConnection } = require('./utils/db');
+const {
+  formatDateId,
+  formatDateWeekdayId,
+  formatDateTimeId,
+  formatVisitDateId
+} = require('./utils/dateDisplay');
 const { clinicalMultipartBeforeCsrf } = require('./utils/multerClinical');
 const siteRoutes = require('./routes/site');
 const authRoutes = require('./routes/auth');
@@ -71,6 +77,10 @@ app.use((req, res, next) => {
   res.locals.isSuperAdmin = req.session.admin?.role === 'superadmin';
   res.locals.appName = process.env.APP_NAME || 'Klinik Digital';
   res.locals.adminPath = req.path || '';
+  res.locals.formatDateId = formatDateId;
+  res.locals.formatDateWeekdayId = formatDateWeekdayId;
+  res.locals.formatDateTimeId = formatDateTimeId;
+  res.locals.formatVisitDateId = formatVisitDateId;
 
   delete req.session.oldForm;
   next();

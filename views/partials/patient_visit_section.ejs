@@ -1,7 +1,4 @@
 <% 
-  const visitDateStr = visit.visited_at
-    ? new Date(visit.visited_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-    : '—';
   const medsJv = jparse(visit.medications_json);
   const ecgV = examShow(visit.ecg_results);
   const echoV = examShow(visit.echo_results);
@@ -22,7 +19,7 @@
       >▸</span>
       <div class="min-w-0">
         <h2 class="text-sm font-extrabold leading-tight tracking-tight text-ink-900 sm:text-[0.95rem]">Kunjungan ke-<%= visit.visit_number %></h2>
-        <p class="mt-0.5 text-[0.7rem] text-ink-500"><span class="text-ink-600"><%= visitDateStr %></span></p>
+        <p class="mt-0.5 text-[0.7rem] text-ink-500"><span class="text-ink-600"><%= formatVisitDateId(visit.visited_at) %></span></p>
       </div>
     </div>
     <div class="flex shrink-0 flex-wrap items-center gap-1 pl-8 sm:pl-0" onclick="event.stopPropagation()">
@@ -166,7 +163,7 @@
         <ul class="space-y-2">
           <% apptJv.forEach(function (a) { %>
             <li class="rounded-lg border border-amber-100/80 bg-amber-50/30 px-2.5 py-2 text-xs text-ink-800">
-              <p class="font-semibold text-ink-900"><%= a && a.datetime ? a.datetime : '—' %></p>
+              <p class="font-semibold text-ink-900"><%= a && a.datetime ? formatVisitDateId(a.datetime) : '—' %></p>
               <% if (a && a.note) { %>
                 <p class="mt-0.5 text-ink-700"><%= a.note %></p>
               <% } %>

@@ -9,6 +9,15 @@ function dashboard() {
 }
 
 /** @returns {AdminNav} */
+function visitQueueToday() {
+  return {
+    pageTitle: 'Antrian hari ini',
+    subtitle: 'Janji kontrol dari data pasien (bagian Janji & kontrol).',
+    backItems: []
+  };
+}
+
+/** @returns {AdminNav} */
 function patientsIndex() {
   return { pageTitle: 'Pasien', backItems: [] };
 }
@@ -106,6 +115,7 @@ function staffEdit(staff) {
 
 module.exports = {
   dashboard,
+  visitQueueToday,
   patientsIndex,
   patientShow,
   patientEdit,

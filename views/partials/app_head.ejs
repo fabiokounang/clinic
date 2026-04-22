@@ -166,6 +166,47 @@
     text-transform: uppercase;
   }
 
+  /* Form tambah pasien — input sedikit lebih ringkas */
+  .patient-intake-compact .field-input {
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.875rem;
+    font-size: 0.875rem;
+  }
+
+  .patient-intake-compact .field-input[type='date'] {
+    min-height: 44px;
+  }
+
+  .patient-intake-compact .field-select {
+    min-height: 44px;
+    padding: 0.5rem 2.35rem 0.5rem 0.75rem;
+    border-radius: 0.875rem;
+    font-size: 0.875rem;
+    background-position: right 0.55rem center;
+    background-size: 1rem 1rem;
+  }
+
+  .patient-intake-compact .field-textarea {
+    min-height: 96px;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.875rem;
+    font-size: 0.875rem;
+  }
+
+  .patient-intake-compact .field-label {
+    font-size: 0.68rem;
+    margin-bottom: 0.35rem;
+    letter-spacing: 0.08em;
+  }
+
+  @media (max-width: 640px) {
+    .patient-intake-compact .field-input,
+    .patient-intake-compact .field-select {
+      min-height: 44px;
+    }
+  }
+
   .chip {
     position: relative;
     display: inline-flex;
